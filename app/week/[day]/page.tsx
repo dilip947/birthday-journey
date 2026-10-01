@@ -1,0 +1,1782 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+
+const TEST_MODE = false;
+
+type Coupon = {
+  title: string;
+};
+
+type DayData = {
+  title: string;
+  image: string;
+  paragraph: string;
+  coupons?: Coupon[];
+  quotes?: string[];
+};
+
+const dayData: Record<string, DayData> = {
+  "1": {
+    title: "The Beginning",
+    image: "/images/hero/1.JPG",
+    paragraph:
+      "The countdown has officially begun. ❤️ Your birthday is getting closer, and honestly, I think I'm more excited than you are. There are so many little things I want to do for you, so many surprises waiting to happen, and a whole lot of love that I want to put into these next few days. I don't want your birthday to be just one ordinary day on the calendar. I want the days leading up to it to feel special too — filled with little smiles, unexpected moments, cute surprises, and reminders of how much you mean to me. So consider today the beginning of your little birthday journey. There are still more days to go, and I have a lot planned for my favorite person. For now, enjoy today's little surprises... and don't forget to scratch your coupons. 😌❤️",
+    coupons: [
+      {
+        title: "One Long Hug 🫂❤️",
+      },
+      {
+        title: "One Kiss 💋❤️",
+      },
+      {
+        title: "Hold My Hand 🤝❤️",
+      },
+    ],
+  },
+
+  "2": {
+    title: "A Little More Love",
+    image: "/images/hero/2.JPG",
+    paragraph:
+      "A little more love for you today. ❤️ And since you deserve to spoil yourself a little, today's surprises come with a tiny shopping treat. Pick whichever one you like and enjoy it. No overthinking — just something small from me to make you smile. 🛍️❤️",
+    coupons: [
+      {
+        title:
+          "Shopping Voucher · ₹500 🛍️❤️",
+      },
+      {
+        title:
+          "Shopping Voucher · ₹1,000 🛍️✨",
+      },
+      {
+        title:
+          "Shopping Voucher · ₹1,500 🛍️👑",
+      },
+    ],
+  },
+
+  "3": {
+    title: "Our Little World",
+    image: "/images/hero/3.JPG",
+    paragraph:
+      "Today is about making a little time for us. ❤️ Sometimes the best memories aren't about doing something huge. They're simply about being together, talking, laughing, eating something good, and enjoying each other's company. So here are a couple of little date ideas for whenever we decide to use them. 🎬🍝❤️",
+    coupons: [
+      {
+        title: "Movie Date 🎬🍿❤️",
+      },
+      {
+        title: "Dinner Date 🍝❤️",
+      },
+    ],
+  },
+
+  "4": {
+    title: "More Memories",
+    image: "/images/hero/4.JPG",
+    paragraph:
+      "A few more little surprises for you today. ❤️ Because apparently one day of birthday surprises wasn't enough. Pick one, scratch it, and we'll see what you get. 😌❤️",
+    coupons: [
+      {
+        title: "Forehead Kiss 💋❤️",
+      },
+      {
+        title: "Cheek Kiss 😘❤️",
+      },
+      {
+        title: "Lip Kiss 💋❤️",
+      },
+    ],
+  },
+
+  "5": {
+    title: "Halfway There",
+    image: "/images/hero/5.JPG",
+    paragraph:
+      "We're already halfway there. ❤️ The birthday is getting closer, but there are still a few more surprises waiting for you. For today, I thought we'd keep things simple — a little time together, a few conversations, and maybe one of those nights where we just don't feel like ending the conversation. 🌙❤️",
+    coupons: [
+      {
+        title:
+          "Whole Night Talk 🌙🫂❤️",
+      },
+      {
+        title:
+          "Whole Night Chat 🌙💬❤️",
+      },
+    ],
+  },
+
+  "6": {
+    title: "Almost Your Day",
+    image: "/images/hero/6.JPG",
+    paragraph:
+      "Your day is getting closer. ❤️ So today, instead of another coupon, I wanted to leave you with a few little reminders. Read them whenever you need a reason to smile.",
+    quotes: [
+      "You are not just another year older. You are another year more beautiful, more precious, and more loved. ❤️",
+      "If I could give you one thing for your birthday, it would be the ability to see yourself through my eyes — just once — so you could understand how special you really are.",
+      "Your birthday may be one day on the calendar, but having you in my life makes every ordinary day feel worth celebrating.",
+    ],
+  },
+
+  "7": {
+    title: "Getting Closer",
+    image: "/images/hero/7.JPG",
+    paragraph:
+      "Only a few more days now. ❤️ I hope these little surprises have been making the countdown a little more fun. Before the big day arrives, here are a few more things I want you to remember.",
+    quotes: [
+      "May this birthday bring you the kind of happiness that stays long after the candles are gone. 🎂❤️",
+      "Another year of your life means another year of reasons for me to be grateful that you exist.",
+      "I hope you never forget how many beautiful things are still waiting for you in the years ahead.",
+      "Your smile deserves more celebrations than one birthday could ever contain. ❤️",
+    ],
+  },
+
+  "8": {
+    title: "Almost Time",
+    image: "/images/memories/9.JPG",
+    paragraph:
+      "We're getting really close now. ❤️ Your birthday is almost here, and I hope you're enjoying these little moments along the way. Just a couple more days until the actual celebration begins.",
+    quotes: [
+      "The best thing about birthdays isn't getting older. It's getting another year to become everything you've always dreamed of becoming.",
+      "I hope the coming year gives you more reasons to laugh, more places to explore, and more memories to keep forever. 🌸",
+      "Some people make memories. Some people become memories. I hope I get to be part of many more of yours. ❤️",
+      "Your story is still being written, and I hope this next chapter is one of your most beautiful yet.",
+      "No matter how many birthdays come and go, I hope you always remember that you are deeply loved. ❤️",
+    ],
+  },
+
+  "9": {
+    title: "One More Sleep",
+    image: "/images/memories/10.JPG",
+    paragraph:
+      "One more day after this. ❤️ Tomorrow is almost here, and I hope you're ready because the final part of your little birthday journey is waiting. For now, enjoy this last quiet moment before your day arrives.",
+    quotes: [
+      "Tomorrow the world gets to celebrate the day you were born. I get to celebrate the fact that I get to know and love you. ❤️",
+      "One more sleep until your day, but honestly, every day with you already feels like a little celebration.",
+      "I hope tomorrow reminds you of how many people are lucky to have you in their lives. 🎂",
+      "You deserve a birthday filled with the same warmth, happiness, and love that you bring into the lives of others.",
+      "Tomorrow is your birthday. But if I had my way, I'd celebrate you every single day. ❤️",
+    ],
+  },
+
+  "10": {
+    title: "The Final Countdown",
+    image: "/images/memories/11.JPG",
+    paragraph:
+      "This is it. ❤️ Ten days of little surprises, memories, messages, and tiny moments leading up to your birthday. Tomorrow is your day, and there's only one thing left to say: I hope the next chapter of your life is full of happiness, adventures, laughter, and beautiful memories. And maybe, if you choose me too, we can make a lot of those memories together. ❤️",
+    coupons: [
+      {
+        title:
+          "Life Journey Ticket 🎫❤️ — You won me. And if you choose me too, I'd love to spend this beautiful life journey with you. Here's to all the years, adventures, laughs, late-night talks, celebrations, and memories we still have ahead of us. ❤️",
+      },
+    ],
+  },
+};
+
+function numberToWord(number: number) {
+  const words = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+  ];
+
+  return words[number] || String(number);
+}
+
+function getIndiaNow() {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(
+    new Date()
+  );
+
+  const values: Record<string, string> = {};
+
+  parts.forEach((part) => {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  });
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+  };
+}
+
+function getCurrentDay() {
+  const now = getIndiaNow();
+
+  if (now.month < 10) return 1;
+  if (now.month > 10) return 10;
+
+  if (now.day <= 1) return 1;
+  if (now.day >= 10) return 10;
+
+  return now.day;
+}
+
+function getBirthdayCountdown() {
+  const now = new Date();
+
+  const target = new Date(
+    "2026-10-11T00:00:00+05:30"
+  );
+
+  const difference = Math.max(
+    0,
+    target.getTime() - now.getTime()
+  );
+
+  return {
+    days: Math.floor(
+      difference / (1000 * 60 * 60 * 24)
+    ),
+    hours: Math.floor(
+      (difference / (1000 * 60 * 60)) % 24
+    ),
+    minutes: Math.floor(
+      (difference / (1000 * 60)) % 60
+    ),
+    seconds: Math.floor(
+      (difference / 1000) % 60
+    ),
+  };
+}
+
+function getNextDayCountdown() {
+  const now = new Date();
+
+  const india = getIndiaNow();
+
+  const nextDay = india.day + 1;
+
+  let target: Date;
+
+  if (nextDay >= 11) {
+    target = new Date(
+      "2026-10-11T00:00:00+05:30"
+    );
+  } else {
+    target = new Date(
+      `2026-10-${String(nextDay).padStart(
+        2,
+        "0"
+      )}T00:00:00+05:30`
+    );
+  }
+
+  const difference = Math.max(
+    0,
+    target.getTime() - now.getTime()
+  );
+
+  return {
+    days: Math.floor(
+      difference / (1000 * 60 * 60 * 24)
+    ),
+    hours: Math.floor(
+      (difference / (1000 * 60 * 60)) % 24
+    ),
+    minutes: Math.floor(
+      (difference / (1000 * 60)) % 60
+    ),
+    seconds: Math.floor(
+      (difference / 1000) % 60
+    ),
+  };
+}
+
+/* =====================================================
+   SCRATCH COUPON
+===================================================== */
+
+function ScratchCoupon({
+  title,
+  couponNumber,
+}: Coupon & {
+  couponNumber: number;
+}) {
+  const canvasRef =
+    useRef<HTMLCanvasElement | null>(null);
+
+  const [revealed, setRevealed] =
+    useState(false);
+
+  const [scratching, setScratching] =
+    useState(false);
+
+  const lastPoint =
+    useRef<{
+      x: number;
+      y: number;
+    } | null>(null);
+
+  const scratchCount =
+    useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    /*
+      Fixed internal resolution.
+      This prevents the distorted canvas
+      problem.
+    */
+
+    canvas.width = 1000;
+    canvas.height = 260;
+
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    ctx.globalCompositeOperation =
+      "source-over";
+
+    /*
+      Scratch surface.
+    */
+
+    ctx.fillStyle = "#29252d";
+
+    ctx.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    /*
+      Centered coupon number.
+    */
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillStyle = "#c4bbc4";
+
+    ctx.font =
+      "500 42px 'Cormorant Garamond', Georgia, serif";
+
+    ctx.fillText(
+      `COUPON ${couponNumber}`,
+      canvas.width / 2,
+      canvas.height / 2 - 18
+    );
+
+    /*
+      Scratch instruction.
+    */
+
+    ctx.fillStyle = "#756c76";
+
+    ctx.font =
+      "600 11px Manrope, Arial, sans-serif";
+
+    ctx.fillText(
+      "SCRATCH TO REVEAL",
+      canvas.width / 2,
+      canvas.height / 2 + 32
+    );
+  }, [couponNumber]);
+
+  const getPosition = (
+    event: React.PointerEvent<HTMLCanvasElement>
+  ) => {
+    const canvas = canvasRef.current;
+
+    if (!canvas) {
+      return {
+        x: 0,
+        y: 0,
+      };
+    }
+
+    const rect =
+      canvas.getBoundingClientRect();
+
+    return {
+      x:
+        ((event.clientX - rect.left) /
+          rect.width) *
+        canvas.width,
+
+      y:
+        ((event.clientY - rect.top) /
+          rect.height) *
+        canvas.height,
+    };
+  };
+
+  const scratch = (
+    event: React.PointerEvent<HTMLCanvasElement>
+  ) => {
+    if (revealed) return;
+
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    const point = getPosition(event);
+
+    ctx.globalCompositeOperation =
+      "destination-out";
+
+    ctx.lineWidth = 90;
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (lastPoint.current) {
+      ctx.beginPath();
+
+      ctx.moveTo(
+        lastPoint.current.x,
+        lastPoint.current.y
+      );
+
+      ctx.lineTo(
+        point.x,
+        point.y
+      );
+
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+
+      ctx.arc(
+        point.x,
+        point.y,
+        45,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+    }
+
+    lastPoint.current = point;
+
+    scratchCount.current += 1;
+
+    /*
+      Reveal after a reasonable number
+      of strokes.
+    */
+
+    if (scratchCount.current >= 18) {
+      setRevealed(true);
+    }
+  };
+
+  const handlePointerDown = (
+    event: React.PointerEvent<HTMLCanvasElement>
+  ) => {
+    event.preventDefault();
+
+    setScratching(true);
+
+    lastPoint.current = null;
+
+    event.currentTarget.setPointerCapture(
+      event.pointerId
+    );
+
+    scratch(event);
+  };
+
+  const handlePointerMove = (
+    event: React.PointerEvent<HTMLCanvasElement>
+  ) => {
+    if (!scratching) return;
+
+    event.preventDefault();
+
+    scratch(event);
+  };
+
+  const handlePointerUp = () => {
+    setScratching(false);
+
+    lastPoint.current = null;
+  };
+
+  /*
+    Revealed state.
+  */
+
+  if (revealed) {
+    return (
+      <div className="revealed-card">
+
+        <div className="reward-content">
+
+          <p className="reward-label">
+            YOUR REWARD
+          </p>
+
+          <div className="reward-title">
+            {title}
+          </div>
+
+          <div className="reward-divider">
+            ✦
+          </div>
+
+        </div>
+
+        <style jsx>{`
+
+          .revealed-card {
+            position: relative;
+
+            width: 100%;
+            height: 260px;
+
+            overflow: hidden;
+
+            box-sizing: border-box;
+
+            border:
+              1px solid #463b43;
+
+            border-radius: 24px;
+
+            background:
+              radial-gradient(
+                circle at center,
+                #2a2028 0%,
+                #191419 55%,
+                #111012 100%
+              );
+
+            box-shadow:
+              0 20px 60px
+              rgba(
+                0,
+                0,
+                0,
+                0.25
+              );
+          }
+
+          .reward-content {
+            position: absolute;
+
+            inset: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 30px;
+
+            box-sizing: border-box;
+          }
+
+          .reward-label {
+            margin: 0 0 16px;
+
+            color: #8d7d88;
+
+            font-family:
+              Manrope,
+              sans-serif;
+
+            font-size: 9px;
+
+            letter-spacing: 5px;
+          }
+
+          .reward-title {
+            max-width: 90%;
+
+            color: #f2cbd5;
+
+            font-family:
+              "Cormorant Garamond",
+              Georgia,
+              serif;
+
+            font-size:
+              clamp(
+                32px,
+                6vw,
+                48px
+              );
+
+            font-weight: 500;
+
+            line-height: 1.12;
+          }
+
+          .reward-divider {
+            margin-top: 18px;
+
+            color: #a98795;
+
+            font-size: 14px;
+          }
+
+        `}</style>
+
+      </div>
+    );
+  }
+
+  return (
+    <div className="scratch-card">
+
+      <canvas
+        ref={canvasRef}
+        className="scratch-canvas"
+        onPointerDown={
+          handlePointerDown
+        }
+        onPointerMove={
+          handlePointerMove
+        }
+        onPointerUp={
+          handlePointerUp
+        }
+        onPointerCancel={
+          handlePointerUp
+        }
+        onPointerLeave={
+          handlePointerUp
+        }
+      />
+
+      <style jsx>{`
+
+        .scratch-card {
+          position: relative;
+
+          width: 100%;
+          height: 260px;
+
+          overflow: hidden;
+
+          box-sizing: border-box;
+
+          border:
+            1px solid #38313a;
+
+          border-radius: 24px;
+
+          background: #29252d;
+        }
+
+        .scratch-canvas {
+          position: absolute;
+
+          inset: 0;
+
+          display: block;
+
+          width: 100%;
+          height: 100%;
+
+          touch-action: none;
+
+          cursor: grab;
+        }
+
+        .scratch-canvas:active {
+          cursor: grabbing;
+        }
+
+      `}</style>
+
+    </div>
+  );
+}
+
+/* =====================================================
+   PAGE
+===================================================== */
+
+export default function DayPage() {
+  const params = useParams();
+
+  const router = useRouter();
+
+  const requestedDay =
+    Number(params.day);
+
+  const [
+    birthdayCountdown,
+    setBirthdayCountdown,
+  ] = useState(
+    getBirthdayCountdown()
+  );
+
+  const [
+    nextDayCountdown,
+    setNextDayCountdown,
+  ] = useState(
+    getNextDayCountdown()
+  );
+
+  const currentDay =
+    getCurrentDay();
+
+  useEffect(() => {
+    const interval =
+      setInterval(() => {
+
+        setBirthdayCountdown(
+          getBirthdayCountdown()
+        );
+
+        setNextDayCountdown(
+          getNextDayCountdown()
+        );
+
+      }, 1000);
+
+    return () =>
+      clearInterval(interval);
+  }, []);
+
+  /*
+    Invalid route.
+  */
+
+  if (
+    !Number.isInteger(
+      requestedDay
+    ) ||
+    requestedDay < 1 ||
+    requestedDay > 10
+  ) {
+    return (
+      <main className="status-page">
+
+        <div className="status-content">
+
+          <p className="status-eyebrow">
+            PAGE NOT FOUND
+          </p>
+
+          <h1>
+            Something went wrong.
+          </h1>
+
+          <button
+            onClick={() =>
+              router.push("/week")
+            }
+          >
+            Back to the week
+          </button>
+
+        </div>
+
+        <style jsx>{`
+          .status-page {
+            min-height: 100vh;
+            background: #0d0b0e;
+            color: #f5edf2;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 30px;
+
+            box-sizing: border-box;
+
+            font-family:
+              Manrope,
+              sans-serif;
+          }
+
+          .status-content {
+            width: 100%;
+            max-width: 650px;
+
+            text-align: center;
+          }
+
+          .status-eyebrow {
+            margin: 0 0 18px;
+
+            color: #817783;
+
+            font-size: 10px;
+
+            letter-spacing: 5px;
+          }
+
+          .status-content h1 {
+            margin:
+              0 0 30px;
+
+            color: #f1dfe5;
+
+            font-family:
+              "Cormorant Garamond",
+              Georgia,
+              serif;
+
+            font-size:
+              clamp(
+                40px,
+                7vw,
+                60px
+              );
+
+            font-weight: 500;
+          }
+
+          button {
+            border:
+              1px solid #514952;
+
+            background: #171419;
+
+            color: #eee5ea;
+
+            padding:
+              13px 27px;
+
+            border-radius: 999px;
+
+            font-family:
+              Manrope,
+              sans-serif;
+
+            cursor: pointer;
+          }
+        `}</style>
+
+      </main>
+    );
+  }
+
+  /*
+    TEST MODE is TRUE, so these two
+    checks are intentionally bypassed.
+  */
+
+  if (
+    !TEST_MODE &&
+    requestedDay > currentDay
+  ) {
+    return (
+      <main className="status-page">
+
+        <div className="status-content">
+
+          <p className="status-eyebrow">
+            NOT YET
+          </p>
+
+          <h1>
+            I know Cutie, you are very smart. But this day hasn't arrived yet.
+          </h1>
+
+          <button
+            onClick={() =>
+              router.push("/week")
+            }
+          >
+            Back to the week
+          </button>
+
+        </div>
+
+        <style jsx>{`
+
+          .status-page {
+            min-height: 100vh;
+
+            background: #0d0b0e;
+
+            color: #f5edf2;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 30px;
+
+            box-sizing: border-box;
+
+            font-family:
+              Manrope,
+              sans-serif;
+          }
+
+          .status-content {
+            width: 100%;
+
+            max-width: 650px;
+
+            text-align: center;
+          }
+
+          .status-eyebrow {
+            margin:
+              0 0 18px;
+
+            color: #817783;
+
+            font-size: 10px;
+
+            letter-spacing: 5px;
+          }
+
+          .status-content h1 {
+            margin:
+              0 0 30px;
+
+            color: #f1dfe5;
+
+            font-family:
+              "Cormorant Garamond",
+              Georgia,
+              serif;
+
+            font-size:
+              clamp(
+                40px,
+                7vw,
+                60px
+              );
+
+            font-weight: 500;
+
+            line-height: 1.05;
+          }
+
+          button {
+            border:
+              1px solid #514952;
+
+            background: #171419;
+
+            color: #eee5ea;
+
+            padding:
+              13px 27px;
+
+            border-radius: 999px;
+
+            font-family:
+              Manrope,
+              sans-serif;
+
+            font-size: 13px;
+
+            cursor: pointer;
+          }
+
+        `}</style>
+
+      </main>
+    );
+  }
+
+  if (
+    !TEST_MODE &&
+    requestedDay < currentDay
+  ) {
+    return (
+      <main className="status-page">
+
+        <div className="status-content">
+
+          <p className="status-eyebrow">
+            THIS DAY HAS PASSED
+          </p>
+
+          <h1>
+            That little surprise has already
+            been opened.
+          </h1>
+
+          <button
+            onClick={() =>
+              router.push("/week")
+            }
+          >
+            Back to the week
+          </button>
+
+        </div>
+
+        <style jsx>{`
+
+          .status-page {
+            min-height: 100vh;
+
+            background: #0d0b0e;
+
+            color: #f5edf2;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 30px;
+
+            box-sizing: border-box;
+
+            font-family:
+              Manrope,
+              sans-serif;
+          }
+
+          .status-content {
+            width: 100%;
+
+            max-width: 650px;
+
+            text-align: center;
+          }
+
+          .status-eyebrow {
+            margin:
+              0 0 18px;
+
+            color: #817783;
+
+            font-size: 10px;
+
+            letter-spacing: 5px;
+          }
+
+          .status-content h1 {
+            margin:
+              0 0 30px;
+
+            color: #f1dfe5;
+
+            font-family:
+              "Cormorant Garamond",
+              Georgia,
+              serif;
+
+            font-size:
+              clamp(
+                40px,
+                7vw,
+                60px
+              );
+
+            font-weight: 500;
+
+            line-height: 1.05;
+          }
+
+          button {
+            border:
+              1px solid #514952;
+
+            background: #171419;
+
+            color: #eee5ea;
+
+            padding:
+              13px 27px;
+
+            border-radius: 999px;
+
+            font-family:
+              Manrope,
+              sans-serif;
+
+            font-size: 13px;
+
+            cursor: pointer;
+          }
+
+        `}</style>
+
+      </main>
+    );
+  }
+
+  const data =
+    dayData[
+      String(requestedDay)
+    ];
+
+  if (!data) return null;
+
+  return (
+    <main className="page">
+
+      <div className="container">
+
+        {TEST_MODE && (
+          <div className="test-banner">
+            TEST MODE · DAY{" "}
+            {numberToWord(
+              requestedDay
+            ).toUpperCase()}
+          </div>
+        )}
+
+        <div className="top">
+
+          <button
+            className="back-button"
+            onClick={() =>
+              router.push("/week")
+            }
+          >
+            ← Back
+          </button>
+
+          <div className="day-label">
+            Day{" "}
+            {numberToWord(
+              requestedDay
+            )}
+          </div>
+
+        </div>
+
+        <div className="hero">
+
+          <img
+            src={data.image}
+            alt={data.title}
+          />
+
+        </div>
+
+        <section className="content">
+
+          <p className="eyebrow">
+            DAY{" "}
+            {numberToWord(
+              requestedDay
+            ).toUpperCase()}
+          </p>
+
+          <h1>
+            {data.title}
+          </h1>
+
+          <p className="paragraph">
+            {data.paragraph}
+          </p>
+
+        </section>
+
+        {data.coupons &&
+          data.coupons.length > 0 && (
+
+            <section className="coupons-section">
+
+              <div className="coupons">
+
+                {data.coupons.map(
+                  (
+                    coupon,
+                    index
+                  ) => (
+                    <ScratchCoupon
+                      key={`${requestedDay}-${index}`}
+                      title={
+                        coupon.title
+                      }
+                      couponNumber={
+                        index + 1
+                      }
+                    />
+                  )
+                )}
+
+              </div>
+
+            </section>
+          )}
+
+        {data.quotes &&
+          data.quotes.length > 0 && (
+
+            <section className="quotes-section">
+
+              {data.quotes.map(
+                (
+                  quote,
+                  index
+                ) => (
+                  <div
+                    className="quote-card"
+                    key={index}
+                  >
+                    <p>
+                      {quote}
+                    </p>
+                  </div>
+                )
+              )}
+
+            </section>
+          )}
+
+        {requestedDay < 10 && (
+
+          <section className="next-day">
+
+            <p className="next-label">
+              Day{" "}
+              {numberToWord(
+                requestedDay + 1
+              )}{" "}
+              unlocks in
+            </p>
+
+            <div className="countdown">
+
+              <div>
+                <strong>
+                  {String(
+                    nextDayCountdown.days
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  DAYS
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {String(
+                    nextDayCountdown.hours
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  HOURS
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {String(
+                    nextDayCountdown.minutes
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  MIN
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {String(
+                    nextDayCountdown.seconds
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  SEC
+                </span>
+              </div>
+
+            </div>
+
+          </section>
+        )}
+
+        {requestedDay === 10 && (
+
+          <section className="birthday-final">
+
+            <p className="next-label">
+              Tomorrow is her birthday 🎂❤️
+            </p>
+
+            <div className="countdown">
+
+              <div>
+                <strong>
+                  {String(
+                    birthdayCountdown.days
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  DAYS
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {String(
+                    birthdayCountdown.hours
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  HOURS
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {String(
+                    birthdayCountdown.minutes
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  MIN
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {String(
+                    birthdayCountdown.seconds
+                  ).padStart(
+                    2,
+                    "0"
+                  )}
+                </strong>
+                <span>
+                  SEC
+                </span>
+              </div>
+
+            </div>
+
+            <button
+              className="journey-button"
+              onClick={() =>
+                router.push(
+                  "/journey"
+                )
+              }
+            >
+              Continue →
+            </button>
+
+          </section>
+        )}
+
+        <footer>
+          A few little surprises for you ❤️
+        </footer>
+
+      </div>
+
+      <style jsx>{`
+
+        .page {
+          min-height: 100vh;
+
+          background: #0d0b0e;
+
+          color: #f5edf2;
+
+          font-family:
+            Manrope,
+            sans-serif;
+
+          padding:
+            30px 18px 70px;
+
+          box-sizing: border-box;
+        }
+
+        .container {
+          width: 100%;
+
+          max-width: 850px;
+
+          margin: 0 auto;
+        }
+
+        .test-banner {
+          text-align: center;
+
+          color: #77707a;
+
+          font-size: 9px;
+
+          letter-spacing: 4px;
+
+          margin-bottom: 22px;
+        }
+
+        .top {
+          display: flex;
+
+          align-items: center;
+
+          justify-content:
+            space-between;
+
+          margin-bottom: 25px;
+        }
+
+        .back-button {
+          border: 0;
+
+          background: transparent;
+
+          color: #aaa1aa;
+
+          font-family:
+            Manrope,
+            sans-serif;
+
+          font-size: 13px;
+
+          cursor: pointer;
+        }
+
+        .day-label {
+          color: #756b76;
+
+          font-size: 10px;
+
+          letter-spacing: 4px;
+
+          text-transform:
+            uppercase;
+        }
+
+        .hero {
+          width: 100%;
+
+          height:
+            min(70vh, 620px);
+
+          overflow: hidden;
+
+          border-radius: 24px;
+
+          border:
+            1px solid #302b31;
+
+          background: #171419;
+        }
+
+        .hero img {
+          width: 100%;
+          height: 100%;
+
+          display: block;
+
+          object-fit: cover;
+        }
+
+        .content {
+          text-align: center;
+
+          padding:
+            50px 20px 25px;
+        }
+
+        .eyebrow {
+          margin:
+            0 0 15px;
+
+          color: #817783;
+
+          font-size: 10px;
+
+          letter-spacing: 5px;
+        }
+
+        .content h1 {
+          margin:
+            0 0 25px;
+
+          color: #f1dfe5;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size:
+            clamp(
+              40px,
+              7vw,
+              60px
+            );
+
+          font-weight: 500;
+
+          line-height: 1;
+        }
+
+        .paragraph {
+          max-width: 700px;
+
+          margin: 0 auto;
+
+          color: #bdb5bd;
+
+          font-size: 15px;
+
+          line-height: 1.9;
+        }
+
+        .coupons-section {
+          width: 100%;
+
+          margin-top: 40px;
+        }
+
+        .coupons {
+          width: 100%;
+
+          display: flex;
+
+          flex-direction: column;
+
+          gap: 28px;
+        }
+
+        .quotes-section {
+          margin-top: 45px;
+
+          display: flex;
+
+          flex-direction: column;
+
+          gap: 15px;
+        }
+
+        .quote-card {
+          border:
+            1px solid #302b31;
+
+          border-radius: 18px;
+
+          padding:
+            25px 22px;
+
+          background: #121013;
+        }
+
+        .quote-card p {
+          margin: 0;
+
+          text-align: center;
+
+          color: #c6bec6;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 21px;
+
+          line-height: 1.55;
+        }
+
+        .next-day,
+        .birthday-final {
+          text-align: center;
+
+          margin-top: 60px;
+
+          padding:
+            35px 20px;
+
+          border-top:
+            1px solid #29252a;
+        }
+
+        .next-label {
+          margin:
+            0 0 22px;
+
+          color: #938994;
+
+          font-size: 11px;
+
+          letter-spacing: 2px;
+        }
+
+        .countdown {
+          display: flex;
+
+          justify-content:
+            center;
+
+          gap: 12px;
+
+          flex-wrap: wrap;
+        }
+
+        .countdown > div {
+          min-width: 72px;
+
+          padding:
+            14px 10px;
+
+          border:
+            1px solid #302b31;
+
+          border-radius: 15px;
+
+          background: #121013;
+        }
+
+        .countdown strong {
+          display: block;
+
+          color: #f1dfe5;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 30px;
+
+          font-weight: 500;
+        }
+
+        .countdown span {
+          display: block;
+
+          margin-top: 4px;
+
+          color: #756c76;
+
+          font-size: 8px;
+
+          letter-spacing: 2px;
+        }
+
+        .journey-button {
+          margin-top: 30px;
+
+          border:
+            1px solid #5b4c55;
+
+          background: #181419;
+
+          color: #eee5ea;
+
+          border-radius: 999px;
+
+          padding:
+            13px 28px;
+
+          font-family:
+            Manrope,
+            sans-serif;
+
+          cursor: pointer;
+        }
+
+        footer {
+          margin-top: 60px;
+
+          text-align: center;
+
+          color: #514a52;
+
+          font-size: 9px;
+
+          letter-spacing: 4px;
+
+          text-transform:
+            uppercase;
+        }
+
+        @media (max-width: 600px) {
+
+          .page {
+            padding-left: 12px;
+            padding-right: 12px;
+          }
+
+          .hero {
+            height: 55vh;
+
+            border-radius: 18px;
+          }
+
+          .content {
+            padding-left: 8px;
+            padding-right: 8px;
+          }
+
+          .paragraph {
+            font-size: 14px;
+
+            line-height: 1.8;
+          }
+
+          .countdown {
+            gap: 7px;
+          }
+
+          .countdown > div {
+            min-width: 65px;
+          }
+
+        }
+
+      `}</style>
+
+    </main>
+  );
+}
