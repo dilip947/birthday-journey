@@ -1,10 +1,17 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-const days = [
+const TEST_MODE = false;
+
+type Day = {
+  day: number;
+  title: string;
+  image: string;
+};
+
+const days: Day[] = [
   {
     day: 1,
     title: "The Beginning",
@@ -57,484 +64,6 @@ const days = [
   },
 ];
 
-type CountdownTime = {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-};
-
-function getIndiaNow() {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date());
-
-  const get = (type: string) =>
-    Number(
-      parts.find((part) => part.type === type)?.value
-    );
-
-  return {
-    year: get("year"),
-    month: get("month"),
-    day: get("day"),
-    hour: get("hour"),
-    minute: get("minute"),
-    second: get("second"),
-  };
-}
-
-/*
-  Birthday:
-  October 11, 12:00 AM IST
-*/
-function getBirthdayCountdown(): CountdownTime | null {
-  const now = getIndiaNow();
-
-  let birthdayYear = now.year;
-
-  if (
-    now.month > 10 ||
-    (now.month === 10 && now.day > 11)
-  ) {
-    birthdayYear += 1;
-  }
-
-  // October 11, 00:00 IST = October 10, 18:30 UTC
-  const birthdayUTC = Date.UTC(
-    birthdayYear,
-    9,
-    11,
-    -5,
-    -30,
-    0
-  );
-
-  const difference = Math.max(
-    birthdayUTC - Date.now(),
-    0
-  );
-
-  return makeCountdown(difference);
-}
-
-/*
-  Day One = October 1
-  Day Two = October 2
-  ...
-  Day Ten = October 10
-
-  October 11 = Birthday / final day
-*/
-function getCurrentDay() {
-  const now = getIndiaNow();
-
-  if (now.month < 10) {
-    return 0;
-  }
-
-  if (now.month > 10) {
-    return 10;
-  }
-
-  if (now.day < 1) {
-    return 0;
-  }
-
-  if (now.day >= 11) {
-    return 10;
-  }
-
-  return now.day;
-}
-
-/*
-  Next day unlocks at midnight IST.
-*/
-function getNextDayCountdown(): CountdownTime | null {
-  const now = getIndiaNow();
-
-  if (now.month !== 10) {
-    return null;
-  }
-
-  const currentDay = getCurrentDay();
-
-  if (currentDay >= 10) {
-    return null;
-  }
-
-  const nextDay = currentDay + 1;
-
-  // Midnight IST = previous day 18:30 UTC
-  const nextUnlockUTC = Date.UTC(
-    now.year,
-    9,
-    nextDay,
-    -5,
-    -30,
-    0
-  );
-
-  const difference = Math.max(
-    nextUnlockUTC - Date.now(),
-    0
-  );
-
-  return makeCountdown(difference);
-}
-
-function makeCountdown(
-  difference: number
-): CountdownTime {
-  return {
-    days: Math.floor(
-      difference /
-        (1000 * 60 * 60 * 24)
-    ),
-
-    hours: Math.floor(
-      (difference /
-        (1000 * 60 * 60)) %
-        24
-    ),
-
-    minutes: Math.floor(
-      (difference /
-        (1000 * 60)) %
-        60
-    ),
-
-    seconds: Math.floor(
-      (difference / 1000) % 60
-    ),
-  };
-}
-
-export default function BirthdayWeekPage() {
-  const [currentDay, setCurrentDay] =
-    useState<number | null>(null);
-
-  const [birthdayCountdown, setBirthdayCountdown] =
-    useState<CountdownTime | null>(
-      getBirthdayCountdown()
-    );
-
-  const [nextDayCountdown, setNextDayCountdown] =
-    useState<CountdownTime | null>(
-      getNextDayCountdown()
-    );
-
-  useEffect(() => {
-    const update = () => {
-      setCurrentDay(getCurrentDay());
-      setBirthdayCountdown(
-        getBirthdayCountdown()
-      );
-      setNextDayCountdown(
-        getNextDayCountdown()
-      );
-    };
-
-    update();
-
-    const timer = setInterval(
-      update,
-      1000
-    );
-
-    return () => clearInterval(timer);
-  }, []);
-
-  if (currentDay === null) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0d0b0f]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#e9a8b5]" />
-      </main>
-    );
-  }
-
-  const activeDay =
-    days[Math.min(currentDay, 10) - 1];
-
-  return (
-    <main className="min-h-screen bg-[#0d0b0f] px-5 py-12 text-[#f8f1e8] md:px-8">
-
-      <div className="mx-auto max-w-5xl">
-
-        {/* HEADER */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 25,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.8,
-          }}
-          className="text-center"
-        >
-
-          <p className="text-[10px] uppercase tracking-[0.5em] text-[#e9a8b5]/70">
-            A little something for you
-          </p>
-
-          <h1 className="mt-5 font-display text-6xl leading-[0.9] md:text-8xl">
-            Your Birthday
-            <br />
-            <span className="text-[#e9a8b5]">
-              Celebration
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-7 max-w-2xl text-sm leading-7 text-white/40 md:text-base">
-            Your birthday celebration starts this month. ❤️
-            <br />
-            Ten days. Ten little surprises.
-            <br />
-            One very special birthday.
-          </p>
-
-        </motion.div>
-
-        {/* BIRTHDAY COUNTDOWN */}
-        {birthdayCountdown && (
-          <motion.section
-            initial={{
-              opacity: 0,
-              y: 25,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              delay: 0.3,
-              duration: 0.8,
-            }}
-            className="mx-auto mt-14 max-w-3xl text-center"
-          >
-
-            <p className="text-[9px] uppercase tracking-[0.4em] text-[#e9a8b5]">
-              Until her birthday · October 11
-            </p>
-
-            <h2 className="mt-3 font-display text-3xl md:text-4xl">
-              The big day is coming... 🎂
-            </h2>
-
-            <Countdown
-              countdown={birthdayCountdown}
-              large
-            />
-
-          </motion.section>
-        )}
-
-        {/* TODAY'S DAY */}
-        <motion.section
-          initial={{
-            opacity: 0,
-            y: 30,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.6,
-            duration: 0.8,
-          }}
-          className="mx-auto mt-16 max-w-2xl"
-        >
-
-          <p className="mb-5 text-center text-[9px] uppercase tracking-[0.4em] text-white/25">
-            Today's surprise
-          </p>
-
-          <Link
-            href={`/week/${activeDay.day}`}
-            className="group block overflow-hidden rounded-[2rem] border border-[#e9a8b5]/20"
-          >
-
-            <div className="relative aspect-[4/3] overflow-hidden">
-
-              <img
-                src={activeDay.image}
-                alt={`Day ${activeDay.day}`}
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-
-              <div className="absolute bottom-0 left-0 right-0 p-7 md:p-10">
-
-                <p className="text-[10px] uppercase tracking-[0.35em] text-[#e9a8b5]">
-                  Day {numberToWord(activeDay.day)}
-                </p>
-
-                <h2 className="mt-2 font-display text-4xl md:text-5xl">
-                  {activeDay.title}
-                </h2>
-
-                <p className="mt-4 text-xs text-white/50">
-                  Open today's surprise →
-                </p>
-
-              </div>
-
-            </div>
-
-          </Link>
-
-        </motion.section>
-
-        {/* NEXT DAY COUNTDOWN */}
-        {nextDayCountdown && currentDay < 10 && (
-          <motion.section
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            transition={{
-              delay: 0.9,
-              duration: 0.8,
-            }}
-            className="mt-20 border-t border-white/8 pt-12 text-center"
-          >
-
-            <p className="text-[9px] uppercase tracking-[0.4em] text-white/25">
-              Tomorrow's surprise unlocks in
-            </p>
-
-            <Countdown
-              countdown={nextDayCountdown}
-            />
-
-            <p className="mt-5 text-xs text-white/20">
-              Come back when the timer reaches zero. ❤️
-            </p>
-
-          </motion.section>
-        )}
-
-        {/* BIRTHDAY DAY */}
-        {currentDay === 10 && (
-          <section className="mt-20 border-t border-white/8 pt-12 text-center">
-
-            <p className="text-[10px] uppercase tracking-[0.4em] text-[#e9a8b5]">
-              Tomorrow is her birthday 🎂❤️
-            </p>
-
-            <p className="mt-4 text-sm text-white/35">
-              The final birthday experience is waiting.
-            </p>
-
-            <Link
-              href="/journey"
-              className="mt-7 inline-flex min-h-[54px] items-center rounded-full bg-[#e9a8b5] px-8 text-sm font-medium text-[#171319] transition hover:bg-[#f2bdc8]"
-            >
-              Enter Final Birthday Surprise →
-            </Link>
-
-          </section>
-        )}
-
-      </div>
-    </main>
-  );
-}
-
-function Countdown({
-  countdown,
-  large = false,
-}: {
-  countdown: CountdownTime;
-  large?: boolean;
-}) {
-  return (
-    <div
-      className={`mx-auto mt-7 grid max-w-2xl grid-cols-4 gap-2.5 md:gap-4 ${
-        large ? "md:max-w-3xl" : ""
-      }`}
-    >
-
-      <TimeBox
-        value={countdown.days}
-        label="Days"
-        large={large}
-      />
-
-      <TimeBox
-        value={countdown.hours}
-        label="Hours"
-        large={large}
-      />
-
-      <TimeBox
-        value={countdown.minutes}
-        label="Minutes"
-        large={large}
-      />
-
-      <TimeBox
-        value={countdown.seconds}
-        label="Seconds"
-        large={large}
-      />
-
-    </div>
-  );
-}
-
-function TimeBox({
-  value,
-  label,
-  large,
-}: {
-  value: number;
-  label: string;
-  large?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border border-white/10 bg-white/[0.035] backdrop-blur-sm ${
-        large
-          ? "px-2 py-6 md:px-6 md:py-8"
-          : "px-2 py-5 md:px-5 md:py-6"
-      }`}
-    >
-
-      <div
-        className={`font-display text-[#e9a8b5] ${
-          large
-            ? "text-4xl md:text-5xl"
-            : "text-3xl md:text-4xl"
-        }`}
-      >
-        {String(value).padStart(2, "0")}
-      </div>
-
-      <div className="mt-2 text-[8px] uppercase tracking-[0.2em] text-white/25 md:text-[9px]">
-        {label}
-      </div>
-
-    </div>
-  );
-}
-
 function numberToWord(number: number) {
   const words = [
     "",
@@ -550,5 +79,857 @@ function numberToWord(number: number) {
     "Ten",
   ];
 
-  return words[number];
+  return words[number] || String(number);
+}
+
+function getIndiaNow() {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(new Date());
+
+  const values: Record<string, string> = {};
+
+  parts.forEach((part) => {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  });
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+    hour: Number(values.hour),
+    minute: Number(values.minute),
+    second: Number(values.second),
+  };
+}
+
+function getCurrentDay() {
+  const now = getIndiaNow();
+
+  if (now.month < 10) {
+    return 1;
+  }
+
+  if (now.month > 10) {
+    return 10;
+  }
+
+  if (now.day <= 1) {
+    return 1;
+  }
+
+  if (now.day >= 10) {
+    return 10;
+  }
+
+  return now.day;
+}
+
+function getBirthdayCountdown() {
+  const now = new Date();
+
+  const target = new Date(
+    "2026-10-11T00:00:00+05:30"
+  );
+
+  const difference = Math.max(
+    0,
+    target.getTime() - now.getTime()
+  );
+
+  return {
+    days: Math.floor(
+      difference / (1000 * 60 * 60 * 24)
+    ),
+    hours: Math.floor(
+      (difference / (1000 * 60 * 60)) % 24
+    ),
+    minutes: Math.floor(
+      (difference / (1000 * 60)) % 60
+    ),
+    seconds: Math.floor(
+      (difference / 1000) % 60
+    ),
+  };
+}
+
+function getNextDayCountdown() {
+  const now = new Date();
+  const india = getIndiaNow();
+
+  const nextDay = india.day + 1;
+
+  let target: Date;
+
+  if (nextDay >= 11) {
+    target = new Date(
+      "2026-10-11T00:00:00+05:30"
+    );
+  } else {
+    target = new Date(
+      `2026-10-${String(nextDay).padStart(
+        2,
+        "0"
+      )}T00:00:00+05:30`
+    );
+  }
+
+  const difference = Math.max(
+    0,
+    target.getTime() - now.getTime()
+  );
+
+  return {
+    days: Math.floor(
+      difference / (1000 * 60 * 60 * 24)
+    ),
+    hours: Math.floor(
+      (difference / (1000 * 60 * 60)) % 24
+    ),
+    minutes: Math.floor(
+      (difference / (1000 * 60)) % 60
+    ),
+    seconds: Math.floor(
+      (difference / 1000) % 60
+    ),
+  };
+}
+
+export default function BirthdayWeek() {
+  const router = useRouter();
+
+  const [currentDay, setCurrentDay] =
+    useState(getCurrentDay());
+
+  const [birthdayCountdown, setBirthdayCountdown] =
+    useState(getBirthdayCountdown());
+
+  const [nextDayCountdown, setNextDayCountdown] =
+    useState(getNextDayCountdown());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDay(getCurrentDay());
+
+      setBirthdayCountdown(
+        getBirthdayCountdown()
+      );
+
+      setNextDayCountdown(
+        getNextDayCountdown()
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  /*
+    TEST MODE:
+    All 10 days are visible.
+
+    When you are finished testing, change:
+    const TEST_MODE = true;
+    to:
+    const TEST_MODE = false;
+  */
+
+  const visibleDays = TEST_MODE
+    ? days
+    : days.filter(
+        (day) => day.day <= currentDay
+      );
+
+  return (
+    <main className="page">
+
+      <div className="container">
+
+        {TEST_MODE && (
+          <div className="test-banner">
+            TEST MODE · ALL DAYS UNLOCKED
+          </div>
+        )}
+
+        <section className="intro">
+
+          <p className="eyebrow">
+            YOUR BIRTHDAY CELEBRATION
+          </p>
+
+          <h1>
+            Ten little days.
+            <br />
+            Ten little surprises.
+          </h1>
+
+          <p className="intro-text">
+            Your birthday celebration starts
+            this month. ❤️
+          </p>
+
+          <p className="intro-subtext">
+            Ten days. Ten little surprises.
+            One very special birthday.
+          </p>
+
+        </section>
+
+        <section className="birthday-countdown">
+
+          <p className="countdown-label">
+            UNTIL HER BIRTHDAY · OCTOBER 11
+          </p>
+
+          <div className="countdown">
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  birthdayCountdown.days
+                ).padStart(2, "0")}
+              </strong>
+              <span>DAYS</span>
+            </div>
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  birthdayCountdown.hours
+                ).padStart(2, "0")}
+              </strong>
+              <span>HOURS</span>
+            </div>
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  birthdayCountdown.minutes
+                ).padStart(2, "0")}
+              </strong>
+              <span>MIN</span>
+            </div>
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  birthdayCountdown.seconds
+                ).padStart(2, "0")}
+              </strong>
+              <span>SEC</span>
+            </div>
+
+          </div>
+
+          <p className="coming-text">
+            The big day is coming... 🎂
+          </p>
+
+        </section>
+
+        <section className="days-section">
+
+          <div className="section-heading">
+
+            <p className="eyebrow">
+              THE COUNTDOWN
+            </p>
+
+            <h2>
+              {TEST_MODE
+                ? "Explore the days"
+                : `Day ${numberToWord(
+                    currentDay
+                  )}`}
+            </h2>
+
+          </div>
+
+          <div className="days-grid">
+
+            {visibleDays.map((day) => {
+
+              const isToday =
+                day.day === currentDay;
+
+              const isFuture =
+                day.day > currentDay;
+
+              return (
+                <button
+                  key={day.day}
+                  className={`day-card ${
+                    isToday
+                      ? "today"
+                      : ""
+                  } ${
+                    isFuture
+                      ? "future"
+                      : ""
+                  }`}
+                  onClick={() => {
+
+                    if (
+                      TEST_MODE ||
+                      !isFuture
+                    ) {
+                      router.push(
+                        `/week/${day.day}`
+                      );
+                    }
+
+                  }}
+                >
+
+                  <div className="day-image">
+
+                    <img
+                      src={day.image}
+                      alt={day.title}
+                    />
+
+                    {!TEST_MODE &&
+                      isFuture && (
+                        <div className="locked">
+                          LOCKED
+                        </div>
+                      )}
+
+                  </div>
+
+                  <div className="day-info">
+
+                    <p className="day-number">
+                      DAY{" "}
+                      {numberToWord(
+                        day.day
+                      ).toUpperCase()}
+                    </p>
+
+                    <h3>
+                      {day.title}
+                    </h3>
+
+                    {isToday && (
+                      <span className="today-label">
+                        TODAY
+                      </span>
+                    )}
+
+                  </div>
+
+                </button>
+              );
+            })}
+
+          </div>
+
+        </section>
+
+        <section className="next-day">
+
+          <p className="next-label">
+            DAY{" "}
+            {numberToWord(
+              Math.min(
+                currentDay + 1,
+                10
+              )
+            ).toUpperCase()}{" "}
+            UNLOCKS IN
+          </p>
+
+          <div className="countdown small">
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  nextDayCountdown.days
+                ).padStart(2, "0")}
+              </strong>
+              <span>DAYS</span>
+            </div>
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  nextDayCountdown.hours
+                ).padStart(2, "0")}
+              </strong>
+              <span>HOURS</span>
+            </div>
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  nextDayCountdown.minutes
+                ).padStart(2, "0")}
+              </strong>
+              <span>MIN</span>
+            </div>
+
+            <div className="count-box">
+              <strong>
+                {String(
+                  nextDayCountdown.seconds
+                ).padStart(2, "0")}
+              </strong>
+              <span>SEC</span>
+            </div>
+
+          </div>
+
+        </section>
+
+        <footer>
+          A few little surprises for you ❤️
+        </footer>
+
+      </div>
+
+      <style jsx>{`
+
+        .page {
+          min-height: 100vh;
+
+          background: #0d0b0e;
+
+          color: #f5edf2;
+
+          font-family:
+            Manrope,
+            sans-serif;
+
+          padding:
+            40px 18px 80px;
+
+          box-sizing: border-box;
+        }
+
+        .container {
+          width: 100%;
+          max-width: 1050px;
+          margin: 0 auto;
+        }
+
+        .test-banner {
+          text-align: center;
+
+          margin-bottom: 25px;
+
+          color: #77707a;
+
+          font-size: 9px;
+
+          letter-spacing: 4px;
+        }
+
+        .intro {
+          text-align: center;
+
+          max-width: 750px;
+
+          margin:
+            30px auto 60px;
+        }
+
+        .eyebrow {
+          margin: 0 0 15px;
+
+          color: #817783;
+
+          font-size: 10px;
+
+          letter-spacing: 5px;
+
+          font-weight: 500;
+        }
+
+        .intro h1 {
+          margin: 0;
+
+          color: #f1dfe5;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size:
+            clamp(
+              46px,
+              8vw,
+              76px
+            );
+
+          font-weight: 500;
+
+          line-height: 0.95;
+        }
+
+        .intro-text {
+          margin:
+            30px 0 8px;
+
+          color: #c9bdc5;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 24px;
+        }
+
+        .intro-subtext {
+          margin: 0;
+
+          color: #817783;
+
+          font-size: 13px;
+
+          letter-spacing: 1px;
+        }
+
+        .birthday-countdown {
+          text-align: center;
+
+          padding:
+            35px 20px;
+
+          border-top:
+            1px solid #29252a;
+
+          border-bottom:
+            1px solid #29252a;
+        }
+
+        .countdown-label,
+        .next-label {
+          margin:
+            0 0 20px;
+
+          color: #817783;
+
+          font-size: 10px;
+
+          letter-spacing: 3px;
+        }
+
+        .countdown {
+          display: flex;
+
+          justify-content: center;
+
+          gap: 12px;
+
+          flex-wrap: wrap;
+        }
+
+        .count-box {
+          min-width: 78px;
+
+          padding:
+            14px 12px;
+
+          box-sizing: border-box;
+
+          border:
+            1px solid #302b31;
+
+          border-radius: 16px;
+
+          background: #121013;
+        }
+
+        .count-box strong {
+          display: block;
+
+          color: #f1dfe5;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 34px;
+
+          font-weight: 500;
+        }
+
+        .count-box span {
+          display: block;
+
+          margin-top: 4px;
+
+          color: #756c76;
+
+          font-size: 8px;
+
+          letter-spacing: 2px;
+        }
+
+        .coming-text {
+          margin:
+            20px 0 0;
+
+          color: #9d929c;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 19px;
+        }
+
+        .days-section {
+          margin-top: 70px;
+        }
+
+        .section-heading {
+          text-align: center;
+
+          margin-bottom: 35px;
+        }
+
+        .section-heading h2 {
+          margin: 0;
+
+          color: #f1dfe5;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 42px;
+
+          font-weight: 500;
+        }
+
+        .days-grid {
+          display: grid;
+
+          grid-template-columns:
+            repeat(
+              2,
+              minmax(0, 1fr)
+            );
+
+          gap: 20px;
+        }
+
+        .day-card {
+          width: 100%;
+
+          padding: 0;
+
+          overflow: hidden;
+
+          border:
+            1px solid #302b31;
+
+          border-radius: 22px;
+
+          background: #121013;
+
+          color: #fff;
+
+          text-align: left;
+
+          cursor: pointer;
+
+          transition:
+            transform 0.25s ease,
+            border-color 0.25s ease;
+        }
+
+        .day-card:hover {
+          transform:
+            translateY(-4px);
+
+          border-color:
+            #514651;
+        }
+
+        .day-image {
+          position: relative;
+
+          width: 100%;
+
+          height: 300px;
+
+          overflow: hidden;
+        }
+
+        .day-image img {
+          width: 100%;
+          height: 100%;
+
+          object-fit: cover;
+
+          display: block;
+
+          transition:
+            transform 0.5s ease;
+        }
+
+        .day-card:hover
+          .day-image img {
+          transform: scale(1.03);
+        }
+
+        .day-info {
+          position: relative;
+
+          padding:
+            20px 22px 24px;
+        }
+
+        .day-number {
+          margin: 0 0 8px;
+
+          color: #756b76;
+
+          font-size: 9px;
+
+          letter-spacing: 3px;
+        }
+
+        .day-info h3 {
+          margin: 0;
+
+          color: #f1dfe5;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 29px;
+
+          font-weight: 500;
+        }
+
+        .today-label {
+          position: absolute;
+
+          right: 20px;
+          top: 22px;
+
+          color: #c8aab4;
+
+          font-size: 8px;
+
+          letter-spacing: 2px;
+        }
+
+        .locked {
+          position: absolute;
+
+          inset: 0;
+
+          display: flex;
+
+          align-items: center;
+          justify-content: center;
+
+          background:
+            rgba(
+              13,
+              11,
+              14,
+              0.6
+            );
+
+          color: #d4cbd1;
+
+          font-size: 9px;
+
+          letter-spacing: 4px;
+        }
+
+        .next-day {
+          text-align: center;
+
+          margin-top: 70px;
+
+          padding-top: 35px;
+
+          border-top:
+            1px solid #29252a;
+        }
+
+        .small .count-box {
+          min-width: 70px;
+        }
+
+        footer {
+          margin-top: 70px;
+
+          text-align: center;
+
+          color: #514a52;
+
+          font-size: 9px;
+
+          letter-spacing: 4px;
+
+          text-transform: uppercase;
+        }
+
+        @media (max-width: 700px) {
+
+          .page {
+            padding-left: 12px;
+            padding-right: 12px;
+          }
+
+          .days-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .day-image {
+            height: 330px;
+          }
+
+          .intro {
+            margin-top: 20px;
+          }
+
+        }
+
+        @media (max-width: 450px) {
+
+          .day-image {
+            height: 270px;
+          }
+
+          .countdown {
+            gap: 7px;
+          }
+
+          .count-box {
+            min-width: 65px;
+            padding:
+              12px 8px;
+          }
+
+        }
+
+      `}</style>
+
+    </main>
+  );
 }
