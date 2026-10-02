@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 type Day = {
   day: number;
@@ -239,9 +239,9 @@ export default function BirthdayWeek() {
     All 10 days are visible.
 
     When you are finished testing, change:
-    const TEST_MODE = true;
+    const TEST_MODE = false;
     to:
-    const TEST_MODE = true;
+    const TEST_MODE = false;
   */
 
   const visibleDays = TEST_MODE

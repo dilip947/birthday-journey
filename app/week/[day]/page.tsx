@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 type Coupon = {
   title: string;
