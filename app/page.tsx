@@ -143,7 +143,7 @@ export default function Home() {
           </p>
 
           <h1 className="font-serif text-5xl leading-[1.05] text-white md:text-7xl">
-            Your birthday
+            My darling's birthday
             <br />
             <span className="text-[#dca4b7]">
               is coming...
