@@ -9,7 +9,7 @@ const ROUND_COST = 20;
 const FIRST_REWARD = 5;
 const FIFTH_REWARD = 10;
 const MINE_COUNT = 3;
-const TEST_MODE = false;
+const TEST_MODE = true;
 
 type Tile = {
   mine: boolean;
