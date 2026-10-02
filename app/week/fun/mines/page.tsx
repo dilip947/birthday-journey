@@ -259,7 +259,7 @@ export default function MinesPage() {
           unlocked={TEST_MODE || TEST_MODE || bestBalance >= 250}
           threshold="250+ FORTUNE"
           title="👑 Ultimate Wifey Pass"
-          text="Three rounds with one-hour or Oral for each.❤️"
+          text="Three rounds with one-hour Oral for each.❤️"
         />
       </section>
 
