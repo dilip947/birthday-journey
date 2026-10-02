@@ -1,8 +1,8 @@
 @echo off
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 echo ========================================
-echo             LIVE PUSH
+echo              LIVE PUSH
 echo ========================================
 echo.
 
@@ -38,7 +38,7 @@ if errorlevel 1 (
 
 echo.
 echo ========================================
-echo       LIVE PUSH COMPLETED
+echo        LIVE PUSH COMPLETED
 echo ========================================
 echo.
 pause
