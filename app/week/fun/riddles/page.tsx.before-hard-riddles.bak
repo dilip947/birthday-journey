@@ -1,0 +1,705 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+type Question = {
+  question: string;
+  options: string[];
+  answer: number;
+};
+
+const questions: Question[] = [
+  {
+    question: "SUN + FLOWER = ?",
+    options: ["Sunflower", "Sunlight", "Flowerpot", "Sunset"],
+    answer: 0,
+  },
+  {
+    question: "RAIN + BOW = ?",
+    options: ["Rainbow", "Raincoat", "Rainfall", "Waterfall"],
+    answer: 0,
+  },
+  {
+    question: "TOOTH + BRUSH = ?",
+    options: ["Toothbrush", "Toothpaste", "Hairbrush", "Brushwood"],
+    answer: 0,
+  },
+  {
+    question: "STAR + FISH = ?",
+    options: ["Starfish", "Starfishcake", "Goldfish", "Starlight"],
+    answer: 0,
+  },
+  {
+    question: "CUP + CAKE = ?",
+    options: ["Cupcake", "Cupboard", "Cakepop", "Teacake"],
+    answer: 0,
+  },
+  {
+    question: "7 + 5 = ?",
+    options: ["11", "12", "13", "14"],
+    answer: 1,
+  },
+  {
+    question: "9 × 3 = ?",
+    options: ["21", "24", "27", "29"],
+    answer: 2,
+  },
+  {
+    question: "20 − 7 = ?",
+    options: ["11", "12", "13", "14"],
+    answer: 2,
+  },
+  {
+    question: "36 ÷ 6 = ?",
+    options: ["5", "6", "7", "8"],
+    answer: 1,
+  },
+  {
+    question: "15 + 8 − 3 = ?",
+    options: ["18", "19", "20", "21"],
+    answer: 2,
+  },
+];
+
+const KISS_GIF = "/gif/kiss.gif";
+const SAD_GIF = "/gif/sad.gif";
+
+export default function RiddlesPage() {
+  const router = useRouter();
+
+  const [current, setCurrent] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [finished, setFinished] = useState(false);
+  const [showReward, setShowReward] = useState(false);
+
+  const question = questions[current];
+
+  function chooseAnswer(index: number) {
+    if (selected !== null) return;
+
+    setSelected(index);
+
+    if (index === question.answer) {
+      setScore((previous) => previous + 1);
+    }
+
+    window.setTimeout(() => {
+      if (current === questions.length - 1) {
+        setFinished(true);
+      } else {
+        setCurrent((previous) => previous + 1);
+        setSelected(null);
+      }
+    }, 700);
+  }
+
+  function restart() {
+    setCurrent(0);
+    setScore(0);
+    setSelected(null);
+    setFinished(false);
+    setShowReward(false);
+  }
+
+  return (
+    <main className="riddle-page">
+      <div className="riddle-glow riddle-glow-one" />
+      <div className="riddle-glow riddle-glow-two" />
+
+      <section className="riddle-container">
+        <button
+          type="button"
+          className="back-button"
+          onClick={() => router.push("/week/fun")}
+        >
+          ← Fun Day
+        </button>
+
+        {!finished ? (
+          <>
+            <p className="riddle-eyebrow">RIDDLE CHALLENGE</p>
+
+            <h1 className="riddle-title">
+              How well do you know <span>your brain?</span>
+            </h1>
+
+            <p className="riddle-subtitle">
+              Ten little questions.
+              <br />
+              No pressure, wifey. ❤️
+            </p>
+
+            <div className="progress-row">
+              <span>
+                QUESTION {current + 1} / {questions.length}
+              </span>
+
+              <span>SCORE {score}</span>
+            </div>
+
+            <div className="question-card">
+              <p className="question-number">
+                RIDDLE {String(current + 1).padStart(2, "0")}
+              </p>
+
+              <h2>{question.question}</h2>
+
+              <div className="options">
+                {question.options.map((option, index) => {
+                  const isSelected = selected === index;
+                  const isCorrect = index === question.answer;
+
+                  let className = "option-button";
+
+                  if (selected !== null && isCorrect) {
+                    className += " correct";
+                  } else if (selected !== null && isSelected) {
+                    className += " wrong";
+                  }
+
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      className={className}
+                      onClick={() => chooseAnswer(index)}
+                      disabled={selected !== null}
+                    >
+                      <span className="option-letter">
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <span>{option}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="result-screen">
+            <p className="riddle-eyebrow">CHALLENGE COMPLETE</p>
+
+            <div className="score-circle">
+              <strong>{score}</strong>
+              <span>/ 10</span>
+            </div>
+
+            {score === 10 ? (
+              <>
+                <h1>
+                  You <span>won!</span>
+                </h1>
+
+                <p className="result-message">
+                  You have done well.
+                  <br />
+                  I know my wifey is the best. ❤️
+                </p>
+
+                <button
+                  type="button"
+                  className="reward-button"
+                  onClick={() => setShowReward(true)}
+                >
+                  VIEW REWARD
+                </button>
+              </>
+            ) : score >= 8 ? (
+              <>
+                <h1>
+                  So close, <span>wifey!</span>
+                </h1>
+
+                <p className="result-message">
+                  {score}/10 is pretty good...
+                  <br />
+                  But I know you can get all ten. ❤️
+                </p>
+
+                <button
+                  type="button"
+                  className="reward-button"
+                  onClick={restart}
+                >
+                  TRY AGAIN
+                </button>
+              </>
+            ) : (
+              <>
+                <h1>
+                  My wifey <span>can't lose!</span>
+                </h1>
+
+                <p className="result-message">
+                  Only {score}/10?
+                  <br />
+                  Nope. We are trying that again. 😤❤️
+                </p>
+
+                <button
+                  type="button"
+                  className="reward-button"
+                  onClick={() => setShowReward(true)}
+                >
+                  SEE YOUR RESULT
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </section>
+
+      {showReward && (
+        <div
+          className="reward-overlay"
+          onClick={() => setShowReward(false)}
+        >
+          <div
+            className="reward-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {score === 10 ? (
+              <>
+                <p className="modal-eyebrow">YOU DESERVE THIS ❤️</p>
+
+                <img
+                  src={KISS_GIF}
+                  alt="Kissing cats"
+                  className="reward-gif"
+                />
+
+                <h2>My brilliant wifey. 💋</h2>
+
+                <p>
+                  Full marks.
+                  <br />
+                  I knew you could do it.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="modal-eyebrow">HEY, WIFEY...</p>
+
+                <img
+                  src={SAD_GIF}
+                  alt="Sad cat"
+                  className="reward-gif"
+                />
+
+                <h2>My wifey can't lose. 😭</h2>
+
+                <p>
+                  Come on.
+                  <br />
+                  One more try.
+                </p>
+              </>
+            )}
+
+            <button
+              type="button"
+              className="close-button"
+              onClick={() => setShowReward(false)}
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .riddle-page {
+          min-height: 100vh;
+          position: relative;
+          overflow: hidden;
+          background:
+            radial-gradient(
+              circle at 50% 15%,
+              rgba(155, 79, 105, 0.14),
+              transparent 38%
+            ),
+            #09070a;
+          color: #f8f1e8;
+          display: flex;
+          justify-content: center;
+          padding: 65px 20px;
+        }
+
+        .riddle-container {
+          width: 100%;
+          max-width: 820px;
+          position: relative;
+          z-index: 2;
+          text-align: center;
+        }
+
+        .back-button {
+          position: absolute;
+          left: 0;
+          top: 0;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.025);
+          color: rgba(255, 255, 255, 0.55);
+          border-radius: 999px;
+          padding: 10px 17px;
+          font-size: 11px;
+          cursor: pointer;
+          transition: 0.25s ease;
+        }
+
+        .back-button:hover {
+          color: #fff;
+          border-color: rgba(220, 164, 183, 0.35);
+        }
+
+        .riddle-eyebrow {
+          margin: 40px 0 18px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.55em;
+          text-transform: uppercase;
+          color: rgba(220, 164, 183, 0.7);
+        }
+
+        .riddle-title {
+          margin: 0;
+          font-family: var(--font-display), Georgia, serif;
+          font-size: clamp(48px, 7vw, 76px);
+          line-height: 0.95;
+          font-weight: 500;
+          color: #f8f1e8;
+        }
+
+        .riddle-title span,
+        .result-screen h1 span {
+          color: #dca4b7;
+        }
+
+        .riddle-subtitle {
+          margin: 25px auto 42px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 13px;
+          line-height: 2;
+          color: rgba(255, 255, 255, 0.42);
+        }
+
+        .progress-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 12px;
+          padding: 0 5px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.25em;
+          color: rgba(220, 164, 183, 0.65);
+        }
+
+        .question-card {
+          border: 1px solid rgba(255, 255, 255, 0.11);
+          border-radius: 28px;
+          background: rgba(255, 255, 255, 0.025);
+          padding: 50px 45px;
+          box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+        }
+
+        .question-number {
+          margin: 0 0 22px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 8px;
+          letter-spacing: 0.5em;
+          color: rgba(220, 164, 183, 0.55);
+        }
+
+        .question-card h2 {
+          margin: 0 auto 35px;
+          max-width: 650px;
+          font-family: var(--font-display), Georgia, serif;
+          font-size: clamp(30px, 5vw, 48px);
+          font-weight: 500;
+          color: #f8f1e8;
+        }
+
+        .options {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+
+        .option-button {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          padding: 17px 18px;
+          background: rgba(255, 255, 255, 0.025);
+          color: rgba(255, 255, 255, 0.7);
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 12px;
+          text-align: left;
+          cursor: pointer;
+          transition: 0.25s ease;
+        }
+
+        .option-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          border-color: rgba(220, 164, 183, 0.4);
+          background: rgba(220, 164, 183, 0.06);
+        }
+
+        .option-button:disabled {
+          cursor: default;
+        }
+
+        .option-letter {
+          width: 27px;
+          height: 27px;
+          flex: 0 0 27px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          border: 1px solid rgba(255, 255, 255, 0.13);
+          font-size: 9px;
+          color: rgba(255, 255, 255, 0.45);
+        }
+
+        .option-button.correct {
+          border-color: rgba(123, 210, 157, 0.6);
+          background: rgba(123, 210, 157, 0.08);
+          color: #dff8e7;
+        }
+
+        .option-button.correct .option-letter {
+          border-color: rgba(123, 210, 157, 0.65);
+        }
+
+        .option-button.wrong {
+          border-color: rgba(220, 90, 110, 0.55);
+          background: rgba(220, 90, 110, 0.07);
+          color: #f4c5cc;
+        }
+
+        .result-screen {
+          padding-top: 100px;
+        }
+
+        .result-screen .riddle-eyebrow {
+          margin-top: 0;
+        }
+
+        .score-circle {
+          width: 145px;
+          height: 145px;
+          margin: 30px auto;
+          border: 1px solid rgba(220, 164, 183, 0.3);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          background: rgba(220, 164, 183, 0.035);
+          box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-circle strong {
+          font-family: var(--font-display), Georgia, serif;
+          font-size: 58px;
+          line-height: 0.8;
+          font-weight: 500;
+          color: #f8dce5;
+        }
+
+        .score-circle span {
+          margin-top: 12px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.25em;
+          color: rgba(255, 255, 255, 0.35);
+        }
+
+        .result-screen h1 {
+          margin: 0;
+          font-family: var(--font-display), Georgia, serif;
+          font-size: clamp(44px, 7vw, 70px);
+          font-weight: 500;
+        }
+
+        .result-message {
+          margin: 22px auto 30px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 13px;
+          line-height: 2;
+          color: rgba(255, 255, 255, 0.48);
+        }
+
+        .reward-button,
+        .close-button {
+          border: 1px solid rgba(220, 164, 183, 0.4);
+          border-radius: 999px;
+          background: rgba(220, 164, 183, 0.08);
+          color: #f8dce5;
+          padding: 14px 28px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.3em;
+          cursor: pointer;
+          transition: 0.25s ease;
+        }
+
+        .reward-button:hover,
+        .close-button:hover {
+          transform: translateY(-2px);
+          background: rgba(220, 164, 183, 0.14);
+          border-color: rgba(220, 164, 183, 0.7);
+        }
+
+        .reward-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 50;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          background: rgba(4, 3, 5, 0.82);
+          backdrop-filter: blur(12px);
+          animation: fadeIn 0.25s ease;
+        }
+
+        .reward-modal {
+          width: min(470px, 92vw);
+          padding: 35px 30px 30px;
+          border: 1px solid rgba(220, 164, 183, 0.25);
+          border-radius: 28px;
+          background:
+            radial-gradient(
+              circle at 50% 0%,
+              rgba(220, 164, 183, 0.1),
+              transparent 50%
+            ),
+            #110d11;
+          text-align: center;
+          box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65);
+          animation: popIn 0.35s ease;
+        }
+
+        .modal-eyebrow {
+          margin: 0 0 20px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 8px;
+          letter-spacing: 0.45em;
+          color: rgba(220, 164, 183, 0.65);
+        }
+
+        .reward-gif {
+          display: block;
+          width: 190px;
+          height: 190px;
+          object-fit: cover;
+          margin: 0 auto 22px;
+          border-radius: 20px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .reward-modal h2 {
+          margin: 0;
+          font-family: var(--font-display), Georgia, serif;
+          font-size: 34px;
+          font-weight: 500;
+          color: #f8dce5;
+        }
+
+        .reward-modal p:not(.modal-eyebrow) {
+          margin: 12px 0 24px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          font-size: 12px;
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.45);
+        }
+
+        .close-button {
+          padding: 11px 22px;
+          font-size: 8px;
+        }
+
+        .riddle-glow {
+          position: fixed;
+          pointer-events: none;
+          border-radius: 50%;
+          filter: blur(100px);
+        }
+
+        .riddle-glow-one {
+          width: 350px;
+          height: 350px;
+          top: -150px;
+          left: -100px;
+          background: rgba(220, 164, 183, 0.06);
+        }
+
+        .riddle-glow-two {
+          width: 400px;
+          height: 400px;
+          bottom: -200px;
+          right: -100px;
+          background: rgba(107, 53, 75, 0.08);
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes popIn {
+          from {
+            opacity: 0;
+            transform: scale(0.92) translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @media (max-width: 700px) {
+          .riddle-page {
+            padding: 55px 15px 40px;
+          }
+
+          .back-button {
+            position: relative;
+            margin-bottom: 20px;
+          }
+
+          .riddle-eyebrow {
+            margin-top: 15px;
+          }
+
+          .question-card {
+            padding: 35px 18px;
+          }
+
+          .options {
+            grid-template-columns: 1fr;
+          }
+
+          .progress-row {
+            font-size: 8px;
+          }
+
+          .reward-gif {
+            width: 165px;
+            height: 165px;
+          }
+        }
+      `}</style>
+    </main>
+  );
+}

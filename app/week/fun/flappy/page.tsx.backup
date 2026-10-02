@@ -1,0 +1,651 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
+type Pipe = {
+  x: number;
+  gapY: number;
+  counted: boolean;
+};
+
+const GAME_WIDTH = 900;
+const GAME_HEIGHT = 560;
+
+const BIRD_X = 150;
+const BIRD_SIZE = 34;
+
+const GRAVITY = 0.42;
+const FLAP_POWER = -7.2;
+const PIPE_WIDTH = 78;
+const PIPE_GAP = 185;
+const PIPE_SPEED = 4.2;
+
+function createPipe(x: number): Pipe {
+  const min = 110;
+  const max = GAME_HEIGHT - 110 - PIPE_GAP;
+
+  return {
+    x,
+    gapY: min + Math.random() * Math.max(1, max - min),
+    counted: false,
+  };
+}
+
+export default function FlappyHeartPage() {
+  const router = useRouter();
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationRef = useRef<number | null>(null);
+
+  const birdYRef = useRef(GAME_HEIGHT / 2);
+  const velocityRef = useRef(0);
+  const pipesRef = useRef<Pipe[]>([]);
+  const scoreRef = useRef(0);
+  const runningRef = useRef(false);
+  const gameOverRef = useRef(false);
+
+  const [score, setScore] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [started, setStarted] = useState(false);
+
+  const drawHeart = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      size: number,
+      alpha = 1
+    ) => {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      const top = y - size * 0.25;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y + size * 0.45);
+      ctx.bezierCurveTo(
+        x - size * 0.65,
+        y - size * 0.05,
+        x - size * 0.55,
+        top - size * 0.55,
+        x,
+        top - size * 0.05
+      );
+      ctx.bezierCurveTo(
+        x + size * 0.55,
+        top - size * 0.55,
+        x + size * 0.65,
+        y - size * 0.05,
+        x,
+        y + size * 0.45
+      );
+      ctx.closePath();
+
+      const gradient = ctx.createLinearGradient(
+        x - size,
+        y - size,
+        x + size,
+        y + size
+      );
+
+      gradient.addColorStop(0, "#ff9aae");
+      gradient.addColorStop(0.5, "#f15d7d");
+      gradient.addColorStop(1, "#d62f59");
+
+      ctx.fillStyle = gradient;
+      ctx.shadowColor = "rgba(241,93,125,0.45)";
+      ctx.shadowBlur = 18;
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.beginPath();
+      ctx.arc(
+        x - size * 0.18,
+        y - size * 0.08,
+        Math.max(2, size * 0.07),
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.restore();
+    },
+    []
+  );
+
+  const drawGame = useCallback(() => {
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    const scaleX = canvas.clientWidth / GAME_WIDTH;
+const scaleY = canvas.clientHeight / GAME_HEIGHT;
+const scale = Math.min(scaleX, scaleY);
+
+const offsetX = (canvas.clientWidth - GAME_WIDTH * scale) / 2;
+const offsetY = (canvas.clientHeight - GAME_HEIGHT * scale) / 2;
+
+ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+
+    // Background
+    const background = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+    background.addColorStop(0, "#19111b");
+    background.addColorStop(1, "#09070a");
+
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Soft glow
+    const glow = ctx.createRadialGradient(
+      GAME_WIDTH * 0.5,
+      GAME_HEIGHT * 0.45,
+      20,
+      GAME_WIDTH * 0.5,
+      GAME_HEIGHT * 0.45,
+      500
+    );
+
+    glow.addColorStop(0, "rgba(220,164,183,0.08)");
+    glow.addColorStop(1, "rgba(220,164,183,0)");
+
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Background hearts
+    for (let i = 0; i < 15; i++) {
+      const x = (i * 97 + 50) % GAME_WIDTH;
+      const y = (i * 137 + 80) % GAME_HEIGHT;
+
+      drawHeart(ctx, x, y, 11, 0.08);
+    }
+
+    // Pipes
+    pipesRef.current.forEach((pipe) => {
+      const topHeight = pipe.gapY;
+      const bottomY = pipe.gapY + PIPE_GAP;
+
+      const pipeGradient = ctx.createLinearGradient(
+        pipe.x,
+        0,
+        pipe.x + PIPE_WIDTH,
+        0
+      );
+
+      pipeGradient.addColorStop(0, "#8d4059");
+      pipeGradient.addColorStop(0.5, "#c66a83");
+      pipeGradient.addColorStop(1, "#7c334d");
+
+      ctx.fillStyle = pipeGradient;
+
+      ctx.fillRect(pipe.x, 0, PIPE_WIDTH, topHeight);
+      ctx.fillRect(
+        pipe.x,
+        bottomY,
+        PIPE_WIDTH,
+        GAME_HEIGHT - bottomY
+      );
+
+      // Pipe lips
+      ctx.fillStyle = "#d18499";
+
+      ctx.fillRect(pipe.x - 7, topHeight - 17, PIPE_WIDTH + 14, 17);
+      ctx.fillRect(pipe.x - 7, bottomY, PIPE_WIDTH + 14, 17);
+
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+
+      ctx.fillRect(pipe.x + 11, 0, 7, topHeight - 20);
+      ctx.fillRect(pipe.x + 11, bottomY + 20, 7, GAME_HEIGHT - bottomY);
+    });
+
+    // Bird
+    drawHeart(
+      ctx,
+      BIRD_X,
+      birdYRef.current,
+      BIRD_SIZE,
+      1
+    );
+
+    // Score
+    ctx.save();
+
+    ctx.font = "600 28px Manrope, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fillText(String(scoreRef.current), GAME_WIDTH / 2, 55);
+
+    ctx.restore();
+
+    // Start overlay
+    if (!started) {
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+      ctx.textAlign = "center";
+
+      ctx.font = "500 48px Georgia, serif";
+      ctx.fillStyle = "#f8f1e8";
+      ctx.fillText("Flappy Heart", GAME_WIDTH / 2, 235);
+
+      ctx.font = "14px Manrope, Arial, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.fillText(
+        "Click, tap, or press SPACE to fly",
+        GAME_WIDTH / 2,
+        275
+      );
+
+      ctx.font = "12px Manrope, Arial, sans-serif";
+      ctx.fillStyle = "#dca4b7";
+      ctx.fillText(
+        "Your heart is counting on you. ❤️",
+        GAME_WIDTH / 2,
+        310
+      );
+    }
+
+    // Game over overlay
+    if (gameOver) {
+      ctx.fillStyle = "rgba(0,0,0,0.58)";
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+      ctx.textAlign = "center";
+
+      ctx.font = "500 52px Georgia, serif";
+      ctx.fillStyle = "#f8f1e8";
+      ctx.fillText("Game Over", GAME_WIDTH / 2, 230);
+
+      ctx.font = "18px Manrope, Arial, sans-serif";
+      ctx.fillStyle = "#dca4b7";
+      ctx.fillText(
+        `Score · ${scoreRef.current}`,
+        GAME_WIDTH / 2,
+        275
+      );
+
+      ctx.font = "13px Manrope, Arial, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      ctx.fillText(
+        "Press Restart below to try again.",
+        GAME_WIDTH / 2,
+        310
+      );
+    }
+  }, [drawHeart, gameOver, started]);
+
+  const resetGame = useCallback(() => {
+    birdYRef.current = GAME_HEIGHT / 2;
+    velocityRef.current = 0;
+
+    pipesRef.current = [
+      createPipe(GAME_WIDTH + 160),
+      createPipe(GAME_WIDTH + 520),
+      createPipe(GAME_WIDTH + 880),
+    ];
+
+    scoreRef.current = 0;
+
+    setScore(0);
+    setGameOver(false);
+    setStarted(true);
+
+    gameOverRef.current = false;
+    runningRef.current = true;
+  }, []);
+
+  const flap = useCallback(() => {
+    if (!started) {
+      resetGame();
+      return;
+    }
+
+    if (gameOverRef.current) return;
+
+    velocityRef.current = FLAP_POWER;
+  }, [resetGame, started]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    canvas.width = GAME_WIDTH;
+    canvas.height = GAME_HEIGHT;
+
+    pipesRef.current = [
+      createPipe(GAME_WIDTH + 160),
+      createPipe(GAME_WIDTH + 520),
+      createPipe(GAME_WIDTH + 880),
+    ];
+
+    const loop = () => {
+      if (runningRef.current && !gameOverRef.current) {
+        velocityRef.current += GRAVITY;
+        birdYRef.current += velocityRef.current;
+
+        pipesRef.current.forEach((pipe) => {
+          pipe.x -= PIPE_SPEED;
+
+          if (!pipe.counted && pipe.x + PIPE_WIDTH < BIRD_X) {
+            pipe.counted = true;
+
+            scoreRef.current += 1;
+            setScore(scoreRef.current);
+          }
+        });
+
+        const lastPipe =
+          pipesRef.current[pipesRef.current.length - 1];
+
+        if (lastPipe && lastPipe.x < GAME_WIDTH - 270) {
+          pipesRef.current.push(
+            createPipe(GAME_WIDTH + 80)
+          );
+        }
+
+        pipesRef.current = pipesRef.current.filter(
+          (pipe) => pipe.x > -PIPE_WIDTH - 20
+        );
+
+        const birdTop = birdYRef.current - BIRD_SIZE * 0.4;
+        const birdBottom = birdYRef.current + BIRD_SIZE * 0.4;
+
+        let hit = false;
+
+        if (birdTop < 0 || birdBottom > GAME_HEIGHT) {
+          hit = true;
+        }
+
+        for (const pipe of pipesRef.current) {
+          const horizontal =
+            BIRD_X + BIRD_SIZE * 0.35 > pipe.x &&
+            BIRD_X - BIRD_SIZE * 0.35 <
+              pipe.x + PIPE_WIDTH;
+
+          const vertical =
+            birdTop < pipe.gapY ||
+            birdBottom > pipe.gapY + PIPE_GAP;
+
+          if (horizontal && vertical) {
+            hit = true;
+            break;
+          }
+        }
+
+        if (hit) {
+          gameOverRef.current = true;
+          runningRef.current = false;
+          setGameOver(true);
+        }
+      }
+
+      drawGame();
+
+      animationRef.current = requestAnimationFrame(loop);
+    };
+
+    animationRef.current = requestAnimationFrame(loop);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [drawGame]);
+
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (
+        event.code === "Space" ||
+        event.code === "ArrowUp"
+      ) {
+        event.preventDefault();
+        flap();
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+
+    return () =>
+      window.removeEventListener("keydown", handleKey);
+  }, [flap]);
+
+  return (
+    <main className="flappy-page">
+      <section className="flappy-wrapper">
+        <div className="flappy-header">
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => router.push("/week/fun")}
+          >
+            ← Fun Day
+          </button>
+
+          <div className="header-center">
+            <p>FLAPPY HEART</p>
+            <h1>Fly for the love. ❤️</h1>
+          </div>
+
+          <div className="header-spacer" />
+        </div>
+
+        <div
+          className="game-area"
+          onPointerDown={flap}
+          role="button"
+          tabIndex={0}
+          aria-label="Flappy Heart game"
+        >
+          <canvas ref={canvasRef} />
+        </div>
+
+        <div className="game-controls">
+          <div className="score-box">
+            <span>SCORE</span>
+            <strong>{score}</strong>
+          </div>
+
+          <button
+            type="button"
+            className="restart-button"
+            onClick={(event) => {
+              event.stopPropagation();
+              resetGame();
+            }}
+          >
+            Restart
+          </button>
+        </div>
+      </section>
+
+      <style jsx>{`
+        .flappy-page {
+          min-height: 100vh;
+          background: #09070a;
+          color: #f8f1e8;
+          padding: 40px 0 70px;
+          font-family: var(--font-sans), Arial, sans-serif;
+          overflow-x: hidden;
+        }
+
+        .flappy-wrapper {
+          width: 100%;
+          margin: 0 auto;
+        }
+
+        .flappy-header {
+          width: 70%;
+          margin: 0 auto 28px;
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
+          align-items: center;
+        }
+
+        .back-button {
+          justify-self: start;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.03);
+          padding: 10px 16px;
+          color: rgba(255, 255, 255, 0.55);
+          cursor: pointer;
+          font-size: 11px;
+        }
+
+        .header-center {
+          text-align: center;
+        }
+
+        .header-center p {
+          margin: 0 0 8px;
+          font-size: 8px;
+          letter-spacing: 0.45em;
+          color: rgba(220, 164, 183, 0.65);
+        }
+
+        .header-center h1 {
+          margin: 0;
+          font-family: var(--font-display), Georgia, serif;
+          font-size: 38px;
+          font-weight: 500;
+        }
+
+        .header-spacer {
+          width: 1px;
+        }
+
+        .game-area {
+          position: relative;
+          width: min(900px, 92vw);
+          aspect-ratio: 900 / 560;
+          height: auto;
+          min-height: 0;
+          max-height: none;
+          margin: 0 auto;
+          overflow: hidden;
+          border: 1px solid rgba(220, 164, 183, 0.18);
+          border-radius: 24px;
+          box-shadow:
+            0 30px 80px rgba(0, 0, 0, 0.45),
+            inset 0 0 60px rgba(255, 255, 255, 0.015);
+          cursor: pointer;
+          outline: none;
+          background: #09070a;
+        }
+
+        .game-area canvas {
+          position: absolute;
+          inset: 0;
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+
+        .game-controls {
+          width: 70%;
+          margin: 18px auto 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .score-box {
+          min-width: 100px;
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.025);
+          padding: 10px 18px;
+          text-align: center;
+        }
+
+        .score-box span {
+          display: block;
+          font-size: 7px;
+          letter-spacing: 0.3em;
+          color: rgba(255, 255, 255, 0.3);
+        }
+
+        .score-box strong {
+          display: block;
+          margin-top: 2px;
+          font-family: var(--font-display), Georgia, serif;
+          font-size: 24px;
+          font-weight: 500;
+          color: #dca4b7;
+        }
+
+        .restart-button {
+          border: 1px solid rgba(220, 164, 183, 0.3);
+          border-radius: 999px;
+          background: rgba(220, 164, 183, 0.08);
+          padding: 10px 18px;
+          color: #e8bac8;
+          font-size: 10px;
+          letter-spacing: 0.08em;
+          cursor: pointer;
+          transition: 0.25s ease;
+        }
+
+        .restart-button:hover {
+          background: rgba(220, 164, 183, 0.16);
+          transform: translateY(-1px);
+        }
+
+        @media (max-width: 800px) {
+          .flappy-page {
+            min-height: 100dvh;
+            padding: 24px 0 40px;
+          }
+
+          .flappy-header {
+            width: 92vw;
+            grid-template-columns: auto 1fr auto;
+            margin-bottom: 20px;
+          }
+
+          .header-center h1 {
+            font-size: 30px;
+          }
+
+          .header-center p {
+            font-size: 7px;
+          }
+
+          .back-button {
+            padding: 9px 13px;
+            font-size: 10px;
+          }
+
+          .game-area {
+            width: 92vw;
+            aspect-ratio: 900 / 560;
+            height: auto;
+            min-height: 0;
+          }
+
+          .game-controls {
+            width: 92vw;
+            margin-top: 16px;
+          }
+
+          .score-box {
+            min-width: 90px;
+            padding: 9px 15px;
+          }
+
+          .restart-button {
+            padding: 10px 16px;
+          }
+        }
+      `}</style>
+    </main>
+  );
+}

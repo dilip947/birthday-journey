@@ -1,0 +1,643 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+const SIZE = 25;
+const STARTING_BALANCE = 100;
+const ROUND_COST = 20;
+const FIRST_REWARD = 5;
+const FIFTH_REWARD = 10;
+const MINE_COUNT = 3;
+
+type Tile = {
+  mine: boolean;
+  revealed: boolean;
+};
+
+function makeBoard(): Tile[] {
+  const mines = new Set<number>();
+
+  while (mines.size < MINE_COUNT) {
+    mines.add(Math.floor(Math.random() * SIZE));
+  }
+
+  return Array.from({ length: SIZE }, (_, index) => ({
+    mine: mines.has(index),
+    revealed: false,
+  }));
+}
+
+export default function MinesPage() {
+  const router = useRouter();
+
+  const [balance, setBalance] = useState(STARTING_BALANCE);
+  const [board, setBoard] = useState<Tile[]>([]);
+  const [playing, setPlaying] = useState(false);
+  const [safeCount, setSafeCount] = useState(0);
+  const [message, setMessage] = useState("Ready to test your luck, wifey? ❤️");
+  const [roundResult, setRoundResult] = useState<"win" | "mine" | null>(null);
+  const [bestBalance, setBestBalance] = useState(STARTING_BALANCE);
+
+  const reward = useMemo(() => {
+    if (safeCount >= 5) return FIFTH_REWARD;
+    return FIRST_REWARD;
+  }, [safeCount]);
+
+  const startGame = () => {
+    if (balance < ROUND_COST) {
+      setMessage("Not enough fortune points. 😭");
+      return;
+    }
+
+    setBalance((value) => value - ROUND_COST);
+    setBoard(makeBoard());
+    setSafeCount(0);
+    setPlaying(true);
+    setRoundResult(null);
+    setMessage("Choose your first tile... 😈");
+  };
+
+  const revealTile = (index: number) => {
+    if (!playing || board[index]?.revealed) return;
+
+    const tile = board[index];
+
+    if (tile.mine) {
+      const updated = board.map((item) => ({
+        ...item,
+        revealed: item.mine || item.revealed,
+      }));
+
+      setBoard(updated);
+      setPlaying(false);
+      setRoundResult("mine");
+      setMessage(
+        safeCount >= 4
+          ? "You found the mine after building a little fortune. 😭"
+          : "BOOM. The mine got you. 💣"
+      );
+      return;
+    }
+
+    const nextSafeCount = safeCount + 1;
+    const earned = nextSafeCount >= 5 ? FIFTH_REWARD : FIRST_REWARD;
+    const nextBalance = balance + earned;
+
+    const updated = board.map((item, itemIndex) =>
+      itemIndex === index ? { ...item, revealed: true } : item
+    );
+
+    setBoard(updated);
+    setSafeCount(nextSafeCount);
+    setBalance(nextBalance);
+    setBestBalance((value) => Math.max(value, nextBalance));
+
+    if (nextSafeCount === SIZE - MINE_COUNT) {
+      setPlaying(false);
+      setRoundResult("win");
+      setMessage("YOU CLEARED THE WHOLE BOARD! 👑❤️");
+      return;
+    }
+
+    setMessage(
+      nextSafeCount === 4
+        ? "BREAK-EVEN! One more safe tile changes the reward. 👀"
+        : nextSafeCount >= 5
+          ? `SAFE! +${earned} points. You're getting dangerous. 🔥`
+          : `SAFE! +${earned} points. Keep going, wifey. ❤️`
+    );
+  };
+
+  const resetGame = () => {
+    setBoard([]);
+    setPlaying(false);
+    setSafeCount(0);
+    setRoundResult(null);
+    setMessage("Ready to test your luck, wifey? ❤️");
+  };
+
+  return (
+    <main className="mines-page">
+      <header className="mines-header">
+        <button className="back-button" onClick={() => router.push("/week/fun")}>
+          ← Fun Day
+        </button>
+
+        <div className="balance">
+          <span>FORTUNE</span>
+          <strong>{balance} 💰</strong>
+        </div>
+
+        <button className="restart-button" onClick={resetGame}>
+          Restart
+        </button>
+      </header>
+
+      <section className="hero">
+        <p className="eyebrow">WIFEY FORTUNE</p>
+        <h1>💣 Mines</h1>
+        <p className="subtitle">
+          Find the safe tiles. Avoid the mines. Build your fortune. ❤️
+        </p>
+      </section>
+
+      <section className="game-card">
+        <div className="game-info">
+          <div>
+            <span>ROUND COST</span>
+            <strong>20 💰</strong>
+          </div>
+
+          <div>
+            <span>SAFE REVEALS</span>
+            <strong>{safeCount}</strong>
+          </div>
+
+          <div>
+            <span>NEXT REWARD</span>
+            <strong>+{reward} 💰</strong>
+          </div>
+        </div>
+
+        {!playing && board.length === 0 && (
+          <div className="start-screen">
+            <div className="bomb">💣</div>
+            <h2>Ready, Wifey?</h2>
+            <p>
+              Every round costs 20 points.
+              <br />
+              Safe tiles earn points.
+              <br />
+              The fifth safe tile unlocks the bigger reward.
+            </p>
+
+            <button
+              className="play-button"
+              onClick={startGame}
+              disabled={balance < ROUND_COST}
+            >
+              PLAY GAME — 20 💰
+            </button>
+          </div>
+        )}
+
+        {board.length > 0 && (
+          <>
+            <div className="message">{message}</div>
+
+            <div className="mine-grid">
+              {board.map((tile, index) => (
+                <button
+                  key={index}
+                  className={`mine-tile ${
+                    tile.revealed ? (tile.mine ? "mine" : "safe") : ""
+                  }`}
+                  onClick={() => revealTile(index)}
+                  disabled={!playing || tile.revealed}
+                >
+                  {tile.revealed ? (tile.mine ? "💣" : "💎") : "?"}
+                </button>
+              ))}
+            </div>
+
+            {!playing && (
+              <div className={`result ${roundResult}`}>
+                {roundResult === "mine" ? (
+                  <>
+                    <strong>💥 Mine!</strong>
+                    <span>The board got you this time.</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>👑 Board cleared!</strong>
+                    <span>Wifey has officially become dangerous.</span>
+                  </>
+                )}
+
+                <button className="play-button" onClick={startGame}>
+                  PLAY AGAIN — 20 💰
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {playing && (
+          <div className="continue-note">
+            Every safe reveal adds to your fortune. Choose carefully. 👀
+          </div>
+        )}
+      </section>
+
+      <section className="coupons">
+        <div className="coupon-heading">
+          <span>🔒</span>
+          <div>
+            <p className="eyebrow">SECRET REWARDS</p>
+            <h2>Wifey Coupons</h2>
+            <p>Keep playing. Your hidden rewards unlock as your fortune grows.</p>
+          </div>
+        </div>
+
+        <Coupon
+          unlocked={bestBalance >= 250}
+          threshold="250+ FORTUNE"
+          title="30-Minute Wifey Privilege"
+          text="A special 30-minute of Oral ❤️"
+        />
+
+        <Coupon
+          unlocked={bestBalance >= 350}
+          threshold="350+ FORTUNE"
+          title="Three-Round Pass"
+          text="Three special rounds for my sexy wifey ❤️"
+        />
+
+        <Coupon
+          unlocked={bestBalance >= 500}
+          threshold="500+ FORTUNE"
+          title="👑 Ultimate Wifey Pass"
+          text="Three rounds with one-hour or Oral for each.❤️"
+        />
+      </section>
+
+      <style jsx>{`
+        .mines-page {
+          min-height: 100vh;
+          padding: 24px 20px 60px;
+          background:
+            radial-gradient(circle at top, rgba(255, 105, 180, 0.12), transparent 35%),
+            #09090d;
+          color: #fff;
+          font-family: inherit;
+        }
+
+        .mines-header {
+          max-width: 1000px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
+          align-items: center;
+          gap: 16px;
+        }
+
+        button {
+          font: inherit;
+        }
+
+        .back-button,
+        .restart-button {
+          border: 1px solid rgba(255,255,255,.12);
+          background: rgba(255,255,255,.06);
+          color: #fff;
+          border-radius: 12px;
+          padding: 10px 15px;
+          cursor: pointer;
+        }
+
+        .back-button {
+          justify-self: start;
+        }
+
+        .restart-button {
+          justify-self: end;
+        }
+
+        .balance {
+          text-align: center;
+        }
+
+        .balance span,
+        .game-info span {
+          display: block;
+          font-size: 10px;
+          letter-spacing: .14em;
+          opacity: .55;
+        }
+
+        .balance strong {
+          font-size: 20px;
+        }
+
+        .hero {
+          text-align: center;
+          margin: 42px auto 25px;
+        }
+
+        .eyebrow {
+          margin: 0 0 7px;
+          font-size: 11px;
+          letter-spacing: .18em;
+          opacity: .55;
+          font-weight: 700;
+        }
+
+        h1 {
+          margin: 0;
+          font-size: clamp(38px, 7vw, 58px);
+        }
+
+        .subtitle {
+          margin: 8px 0 0;
+          opacity: .65;
+        }
+
+        .game-card {
+          max-width: 620px;
+          margin: 0 auto;
+          padding: 22px;
+          border-radius: 24px;
+          background: rgba(255,255,255,.055);
+          border: 1px solid rgba(255,255,255,.09);
+          box-shadow: 0 25px 80px rgba(0,0,0,.35);
+        }
+
+        .game-info {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+
+        .game-info > div {
+          padding: 12px 6px;
+          border-radius: 14px;
+          background: rgba(255,255,255,.05);
+        }
+
+        .game-info strong {
+          display: block;
+          margin-top: 3px;
+          font-size: 17px;
+        }
+
+        .start-screen {
+          text-align: center;
+          padding: 30px 15px 20px;
+        }
+
+        .bomb {
+          font-size: 62px;
+          margin-bottom: 10px;
+        }
+
+        .start-screen h2 {
+          margin: 0;
+          font-size: 28px;
+        }
+
+        .start-screen p {
+          line-height: 1.65;
+          opacity: .65;
+        }
+
+        .play-button {
+          border: 0;
+          border-radius: 14px;
+          padding: 14px 24px;
+          font-weight: 800;
+          cursor: pointer;
+          background: #fff;
+          color: #111;
+          transition: transform .15s ease;
+        }
+
+        .play-button:hover {
+          transform: translateY(-2px);
+        }
+
+        .play-button:disabled {
+          opacity: .4;
+          cursor: not-allowed;
+        }
+
+        .message {
+          text-align: center;
+          margin: 8px 0 16px;
+          min-height: 22px;
+          font-weight: 700;
+        }
+
+        .mine-grid {
+          width: min(100%, 500px);
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 8px;
+        }
+
+        .mine-tile {
+          aspect-ratio: 1;
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 12px;
+          background: rgba(255,255,255,.075);
+          color: rgba(255,255,255,.25);
+          font-size: clamp(18px, 4vw, 26px);
+          cursor: pointer;
+          transition: transform .12s ease, background .12s ease;
+        }
+
+        .mine-tile:not(:disabled):hover {
+          transform: scale(.96);
+          background: rgba(255,255,255,.14);
+        }
+
+        .mine-tile.safe {
+          background: rgba(90, 220, 150, .14);
+          border-color: rgba(90,220,150,.25);
+        }
+
+        .mine-tile.mine {
+          background: rgba(255,70,100,.16);
+          border-color: rgba(255,70,100,.3);
+        }
+
+        .continue-note {
+          text-align: center;
+          margin-top: 16px;
+          opacity: .5;
+          font-size: 12px;
+        }
+
+        .result {
+          margin-top: 18px;
+          padding: 18px;
+          border-radius: 16px;
+          text-align: center;
+          background: rgba(255,255,255,.055);
+        }
+
+        .result strong,
+        .result span {
+          display: block;
+        }
+
+        .result strong {
+          font-size: 21px;
+        }
+
+        .result span {
+          margin: 5px 0 14px;
+          opacity: .6;
+          font-size: 13px;
+        }
+
+        .coupons {
+          max-width: 620px;
+          margin: 30px auto 0;
+        }
+
+        .coupon-heading {
+          display: flex;
+          gap: 14px;
+          align-items: flex-start;
+          margin-bottom: 15px;
+        }
+
+        .coupon-heading > span {
+          font-size: 28px;
+        }
+
+        .coupon-heading h2 {
+          margin: 0;
+        }
+
+        .coupon-heading p:last-child {
+          margin: 5px 0 0;
+          opacity: .5;
+          font-size: 13px;
+        }
+
+        .coupon {
+          position: relative;
+          overflow: hidden;
+          margin-top: 12px;
+          padding: 18px;
+          border-radius: 18px;
+          border: 1px dashed rgba(255,255,255,.14);
+          background: rgba(255,255,255,.035);
+        }
+
+        .coupon.locked {
+          opacity: .45;
+        }
+
+        .coupon.unlocked {
+          border-color: rgba(255,255,255,.3);
+          background: rgba(255,255,255,.075);
+        }
+
+        .coupon-top {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          align-items: center;
+        }
+
+        .coupon-threshold {
+          font-size: 10px;
+          letter-spacing: .12em;
+          opacity: .55;
+          font-weight: 800;
+        }
+
+        .coupon h3 {
+          margin: 6px 0 5px;
+          font-size: 19px;
+        }
+
+        .coupon p {
+          margin: 0;
+          opacity: .68;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+
+        .claim-note {
+          margin-top: 14px;
+          padding-top: 10px;
+          border-top: 1px dashed rgba(255,255,255,.12);
+          text-align: center;
+          font-size: 11px;
+          letter-spacing: .03em;
+          opacity: .7;
+          font-weight: 700;
+        }
+
+        @media (max-width: 600px) {
+          .mines-page {
+            padding: 15px 12px 40px;
+          }
+
+          .mines-header {
+            gap: 8px;
+          }
+
+          .back-button,
+          .restart-button {
+            padding: 8px 10px;
+            font-size: 12px;
+          }
+
+          .balance strong {
+            font-size: 16px;
+          }
+
+          .hero {
+            margin-top: 28px;
+          }
+
+          .game-card {
+            padding: 15px;
+            border-radius: 20px;
+          }
+
+          .mine-grid {
+            gap: 6px;
+          }
+
+          .mine-tile {
+            border-radius: 9px;
+          }
+        }
+      `}</style>
+    </main>
+  );
+}
+
+function Coupon({
+  unlocked,
+  threshold,
+  title,
+  text,
+}: {
+  unlocked: boolean;
+  threshold: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className={`coupon ${unlocked ? "unlocked" : "locked"}`}>
+      <div className="coupon-top">
+        <span className="coupon-threshold">{threshold}</span>
+        <span>{unlocked ? "🔓 UNLOCKED" : "🔒 LOCKED"}</span>
+      </div>
+
+      <h3>{unlocked ? title : "??? SECRET REWARD ???"}</h3>
+
+      <p>
+        {unlocked
+          ? text
+          : "Reach this fortune level to reveal your special wifey reward."}
+      </p>
+
+      {unlocked && (
+        <div className="claim-note">
+          📸 SCREENSHOT THIS TO CLAIM — otherwise this voucher is not valid.
+        </div>
+      )}
+    </div>
+  );
+}

@@ -239,7 +239,7 @@ export default function BirthdayWeek() {
     All 10 days are visible.
 
     When you are finished testing, change:
-    const TEST_MODE = true;
+    const TEST_MODE = false;
     to:
     const TEST_MODE = false;
   */
@@ -257,7 +257,7 @@ export default function BirthdayWeek() {
 
         {TEST_MODE && (
           <div className="test-banner">
-            TEST MODE · ALL DAYS UNLOCKED
+            TEST MODE Â· ALL DAYS UNLOCKED
           </div>
         )}
 
@@ -275,7 +275,7 @@ export default function BirthdayWeek() {
 
           <p className="intro-text">
             Your birthday celebration starts
-            this month. ❤️
+            this month. â¤ï¸
           </p>
 
           <p className="intro-subtext">
@@ -288,7 +288,7 @@ export default function BirthdayWeek() {
         <section className="birthday-countdown">
 
           <p className="countdown-label">
-            UNTIL HER BIRTHDAY · OCTOBER 11
+            UNTIL HER BIRTHDAY Â· OCTOBER 11
           </p>
 
           <div className="countdown">
@@ -332,7 +332,7 @@ export default function BirthdayWeek() {
           </div>
 
           <p className="coming-text">
-            The big day is coming... 🎂
+            The big day is coming... ðŸŽ‚
           </p>
 
         </section>
@@ -435,7 +435,26 @@ export default function BirthdayWeek() {
           </div>
 
         </section>
+	<section className="fun-time">
+  	<button
+   	 className="fun-time-card"
+   	 onClick={() => router.push("/week/fun")}
+ 	 >
+   	 <div className="fun-time-icon">â™¥</div>
 
+    	<div className="fun-time-content">
+     	 <p>JUST FOR FUN</p>
+     	 <h2>Fun Time</h2>
+     	 <span>
+    	    Two tiny games are waiting for you
+     	 </span>
+   	 </div>
+
+    	<div className="fun-time-arrow">
+    	  â†’
+   	 </div>
+  	</button>
+	</section>
         <section className="next-day">
 
           <p className="next-label">
@@ -492,7 +511,7 @@ export default function BirthdayWeek() {
         </section>
 
         <footer>
-          A few little surprises for you ❤️
+          A few little surprises for you â¤ï¸
         </footer>
 
       </div>
@@ -933,3 +952,9 @@ export default function BirthdayWeek() {
     </main>
   );
 }
+
+
+
+
+
+
