@@ -1,49 +1,37 @@
 @echo off
+title TEST MODE ON - LIVE
 cd /d "%~dp0.."
 
+echo.
 echo ========================================
-echo       TEST MODE ON - LIVE
+echo       TURNING TEST MODE ON - LIVE
 echo ========================================
 echo.
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=@('app\week\page.tsx','app\week\[day]\page.tsx','app\week\fun\mines\page.tsx'); $utf8=New-Object System.Text.UTF8Encoding($false); foreach($p in $files){$t=[System.IO.File]::ReadAllText($p,[System.Text.Encoding]::UTF8); $t=$t.Replace('const TEST_MODE = true;','const TEST_MODE = true;').Replace('const TEST_MODE = false;','const TEST_MODE = true;'); [System.IO.File]::WriteAllText($p,$t,$utf8)}"
-
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$p='lib\testMode.ts'; $content='export const TEST_MODE = true;' + [Environment]::NewLine; [System.IO.File]::WriteAllText($p,$content,(New-Object System.Text.UTF8Encoding($false)))"
 if errorlevel 1 (
     echo.
-    echo ERROR: Could not enable Test Mode.
-    echo.
+    echo ERROR: Could not update Test Mode.
     pause
     exit /b 1
 )
-
-echo Test Mode ON.
-echo Pushing Test Mode version to GitHub...
-echo.
-
-git add -A
-git commit -m "Enable live test mode"
-
+git add "lib\testMode.ts"
+git commit -m "Enable Test Mode"
 if errorlevel 1 (
     echo.
     echo ERROR: Commit failed.
-    echo.
     pause
     exit /b 1
 )
-
 git push origin main
-
 if errorlevel 1 (
     echo.
     echo ERROR: Push failed.
-    echo.
     pause
     exit /b 1
 )
-
 echo.
 echo ========================================
-echo     TEST MODE ON - LIVE COMPLETE
+echo       TEST MODE IS NOW ON - LIVE
 echo ========================================
 echo.
 pause

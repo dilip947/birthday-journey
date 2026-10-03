@@ -9,8 +9,6 @@ const ROUND_COST = 20;
 const FIRST_REWARD = 5;
 const FIFTH_REWARD = 10;
 const MINE_COUNT = 3;
-const TEST_MODE = false;
-
 type Tile = {
   mine: boolean;
   revealed: boolean;
@@ -242,21 +240,21 @@ export default function MinesPage() {
         </div>
 
         <Coupon
-          unlocked={TEST_MODE || TEST_MODE || bestBalance >= 150}
+          unlocked={bestBalance >= 150}
           threshold="150+ FORTUNE"
           title="30-Minute Wifey Privilege"
           text="A special 30-minute of Oral ❤️"
         />
 
         <Coupon
-          unlocked={TEST_MODE || TEST_MODE || bestBalance >= 200}
+          unlocked={bestBalance >= 200}
           threshold="200+ FORTUNE"
           title="Three-Round Pass"
           text="Three special rounds for my sexy wifey ❤️"
         />
 
         <Coupon
-          unlocked={TEST_MODE || TEST_MODE || bestBalance >= 250}
+          unlocked={bestBalance >= 250}
           threshold="250+ FORTUNE"
           title="👑 Ultimate Wifey Pass"
           text="Three rounds with one-hour Oral for each.❤️"

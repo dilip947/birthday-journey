@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const TEST_MODE = false;
+import { TEST_MODE } from "../../lib/testMode";
 
 type Day = {
   day: number;
@@ -239,10 +238,8 @@ export default function BirthdayWeek() {
     All 10 days are visible.
 
     When you are finished testing, change:
-    const TEST_MODE = false;
     to:
-    const TEST_MODE = false;
-  */
+    */
 
   const visibleDays = TEST_MODE
     ? days
@@ -257,7 +254,7 @@ export default function BirthdayWeek() {
 
         {TEST_MODE && (
           <div className="test-banner">
-            TEST MODE Â· ALL DAYS UNLOCKED
+            TEST MODE · ALL DAYS UNLOCKED
           </div>
         )}
 
@@ -275,7 +272,7 @@ export default function BirthdayWeek() {
 
           <p className="intro-text">
             Your birthday celebration starts
-            this month. â¤ï¸
+            this month. ❤️
           </p>
 
           <p className="intro-subtext">
@@ -288,7 +285,7 @@ export default function BirthdayWeek() {
         <section className="birthday-countdown">
 
           <p className="countdown-label">
-            UNTIL HER BIRTHDAY Â· OCTOBER 11
+            UNTIL HER BIRTHDAY · OCTOBER 11
           </p>
 
           <div className="countdown">
@@ -332,7 +329,7 @@ export default function BirthdayWeek() {
           </div>
 
           <p className="coming-text">
-            The big day is coming... ðŸŽ‚
+            The big day is coming... 🎂
           </p>
 
         </section>
@@ -440,7 +437,7 @@ export default function BirthdayWeek() {
    	 className="fun-time-card"
    	 onClick={() => router.push("/week/fun")}
  	 >
-   	 <div className="fun-time-icon">â™¥</div>
+   	 <div className="fun-time-icon">♥</div>
 
     	<div className="fun-time-content">
      	 <p>JUST FOR FUN</p>
@@ -451,7 +448,7 @@ export default function BirthdayWeek() {
    	 </div>
 
     	<div className="fun-time-arrow">
-    	  â†’
+    	  →
    	 </div>
   	</button>
 	</section>
@@ -511,7 +508,7 @@ export default function BirthdayWeek() {
         </section>
 
         <footer>
-          A few little surprises for you â¤ï¸
+          A few little surprises for you ❤️
         </footer>
 
       </div>

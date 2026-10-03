@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-
-const TEST_MODE = false;
+import { TEST_MODE } from "../../../lib/testMode";
 
 type Coupon = {
   title: string;
@@ -79,13 +78,10 @@ const dayData: Record<string, DayData> = {
       "A few more little surprises for you today. ❤️ Because apparently one day of birthday surprises wasn't enough. Pick one, scratch it, and we'll see what you get. 😌❤️",
     coupons: [
       {
-        title: "Forehead Kiss 💋❤️",
+        title: "Cooking for You 🍳❤️",
       },
       {
-        title: "Cheek Kiss 😘❤️",
-      },
-      {
-        title: "Lip Kiss 💋❤️",
+        title: "Dancing Together 💃❤️",
       },
     ],
   },
