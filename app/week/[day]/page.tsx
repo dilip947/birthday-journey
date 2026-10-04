@@ -91,7 +91,7 @@ const dayData: Record<string, DayData> = {
     title: "Halfway There",
     image: "/images/hero/5.JPG",
     paragraph:
-      "We're already halfway there. ❤️ The birthday is getting closer, but there are still a few more surprises waiting for you. For today, I thought we'd keep things simple — a little time together, a few conversations, and maybe one of those nights where we just don't feel like ending the conversation. 🌙❤️",
+      "Five days in, and I’m realizing that my favorite part of this whole journey isn't the surprises themselves — it's the person I'm getting to share them with. ❤️ I love the little things about us: the conversations that go nowhere but somehow last forever, the laughter that starts over something completely stupid, and the feeling that I can just be myself around you. There are still a few things waiting for you, but for today, I just wanted to remind you that you are one of the best parts of my life. 🌙❤️",
   },
 
   "6": {
