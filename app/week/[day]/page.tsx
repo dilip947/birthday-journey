@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { TEST_MODE } from "../../../lib/testMode";
+import DayFiveQuiz from "../../../components/DayFiveQuiz";
 
 type Coupon = {
   title: string;
@@ -91,16 +92,6 @@ const dayData: Record<string, DayData> = {
     image: "/images/hero/5.JPG",
     paragraph:
       "We're already halfway there. ❤️ The birthday is getting closer, but there are still a few more surprises waiting for you. For today, I thought we'd keep things simple — a little time together, a few conversations, and maybe one of those nights where we just don't feel like ending the conversation. 🌙❤️",
-    coupons: [
-      {
-        title:
-          "Whole Night Talk 🌙🫂❤️",
-      },
-      {
-        title:
-          "Whole Night Chat 🌙💬❤️",
-      },
-    ],
   },
 
   "6": {
@@ -1105,6 +1096,8 @@ export default function DayPage() {
 
             </section>
           )}
+
+        {requestedDay === 5 && <DayFiveQuiz />}
 
         {data.quotes &&
           data.quotes.length > 0 && (
