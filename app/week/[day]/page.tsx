@@ -145,6 +145,17 @@ const dayData: Record<string, DayData> = {
       "You deserve a birthday filled with the same warmth, happiness, and love that you bring into the lives of others.",
       "Tomorrow is your birthday. But if I had my way, I'd celebrate you every single day. ❤️",
     ],
+    coupons: [
+      {
+        title: "Whenever You Call, I Will Come 📞❤️",
+      },
+      {
+        title: "Food Is On Me 🍔❤️",
+      },
+      {
+        title: "Lift You Up 🫂❤️",
+      },
+    ],
   },
 
   "10": {
@@ -1068,6 +1079,32 @@ export default function DayPage() {
 
         </section>
 
+        {requestedDay === 5 && <DayFiveQuiz />}
+
+        {data.quotes &&
+          data.quotes.length > 0 && (
+
+            <section className="quotes-section">
+
+              {data.quotes.map(
+                (
+                  quote,
+                  index
+                ) => (
+                  <div
+                    className="quote-card"
+                    key={index}
+                  >
+                    <p>
+                      {quote}
+                    </p>
+                  </div>
+                )
+              )}
+
+            </section>
+          )}
+
         {data.coupons &&
           data.coupons.length > 0 && (
 
@@ -1093,32 +1130,6 @@ export default function DayPage() {
                 )}
 
               </div>
-
-            </section>
-          )}
-
-        {requestedDay === 5 && <DayFiveQuiz />}
-
-        {data.quotes &&
-          data.quotes.length > 0 && (
-
-            <section className="quotes-section">
-
-              {data.quotes.map(
-                (
-                  quote,
-                  index
-                ) => (
-                  <div
-                    className="quote-card"
-                    key={index}
-                  >
-                    <p>
-                      {quote}
-                    </p>
-                  </div>
-                )
-              )}
 
             </section>
           )}
@@ -1197,7 +1208,6 @@ export default function DayPage() {
 
           </section>
         )}
-
         {requestedDay === 10 && (
 
           <section className="birthday-final">
