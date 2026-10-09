@@ -7,7 +7,6 @@ import DayFiveQuiz from "../../../components/DayFiveQuiz";
 
 type Coupon = {
   title: string;
-  description?: string;
 };
 
 type DayData = {
@@ -311,7 +310,6 @@ function getNextDayCountdown() {
 
 function ScratchCoupon({
   title,
-  description,
   couponNumber,
 }: Coupon & {
   couponNumber: number;
@@ -544,12 +542,6 @@ function ScratchCoupon({
           <div className="reward-title">
             {title}
           </div>
-          {description && (
-            <p className="reward-description">
-              {description}
-            </p>
-          )}
-
 
           <div className="reward-divider">
             ✦
@@ -646,16 +638,6 @@ function ScratchCoupon({
             font-weight: 500;
 
             line-height: 1.12;
-          }
-
-          .reward-description {
-            max-width: 680px;
-            margin: 18px auto 0;
-            color: #c6bec6;
-            font-family: Manrope, sans-serif;
-            font-size: 14px;
-            line-height: 1.7;
-            text-align: center;
           }
 
           .reward-divider {

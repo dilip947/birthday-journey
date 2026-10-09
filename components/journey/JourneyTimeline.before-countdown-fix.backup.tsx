@@ -177,7 +177,6 @@ const coupons = [
 export function JourneyTimeline() {
   const [unlocked, setUnlocked] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
-    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
@@ -193,7 +192,6 @@ export function JourneyTimeline() {
       if (difference <= 0) {
         setUnlocked(true);
         setTimeLeft({
-          days: 0,
           hours: 0,
           minutes: 0,
           seconds: 0,
@@ -204,7 +202,6 @@ export function JourneyTimeline() {
       const totalSeconds = Math.floor(difference / 1000);
 
       setTimeLeft({
-        days: Math.floor(totalSeconds / 86400),
         hours: Math.floor((totalSeconds % 86400) / 3600),
         minutes: Math.floor((totalSeconds % 3600) / 60),
         seconds: totalSeconds % 60,
@@ -237,20 +234,12 @@ export function JourneyTimeline() {
             It opens at 3:00 PM.
           </p>
 
-          <div className="mx-auto mt-12 flex max-w-xl justify-center gap-3 md:gap-5">
-
+          <div className="mx-auto mt-12 flex max-w-md justify-center gap-3 md:gap-5">
             <div className="min-w-[82px] rounded-2xl border border-black/10 bg-white/40 px-4 py-5">
               <strong className="block font-display text-3xl md:text-4xl">
-                {String(timeLeft.days).padStart(2, "0")}
-              </strong>
-              <span className="mt-2 block text-[8px] uppercase tracking-[0.3em] text-black/40">
-                Days
-              </span>
-            </div>
-
-            <div className="min-w-[82px] rounded-2xl border border-black/10 bg-white/40 px-4 py-5">
-              <strong className="block font-display text-3xl md:text-4xl">
-                {String(timeLeft.hours).padStart(2, "0")}
+                {String(Math.floor(
+                  (timeLeft.hours + 24) % 24
+                )).padStart(2, "0")}
               </strong>
               <span className="mt-2 block text-[8px] uppercase tracking-[0.3em] text-black/40">
                 Hours
@@ -274,7 +263,6 @@ export function JourneyTimeline() {
                 Seconds
               </span>
             </div>
-
           </div>
 
           <p className="mt-10 font-display text-xl italic text-[#9d5366] md:text-2xl">
