@@ -1,5 +1,4 @@
 @echo off
 cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0set-test-mode-local.ps1" -On
-echo.
+powershell -ExecutionPolicy Bypass -File ".\set-test-mode-local.ps1" -On
 pause

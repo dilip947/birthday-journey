@@ -1,5 +1,7 @@
 "use client";
 
+import { TEST_MODE } from "@/lib/testMode";
+
 import { motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -113,28 +115,8 @@ const coupons = [
     text: "One ridiculously long hug. No rushing away. No escaping. Just you and me.",
   },
   {
-    title: "Forehead Kiss 💋",
-    text: "One slow, soft forehead kiss whenever my baccha decides she needs one.",
-  },
-  {
-    title: "Full-Body Kiss Pass 💋❤️",
-    text: "A romantic trail of kisses from your forehead downward. Redeem when you're feeling extra loved.",
-  },
-  {
     title: "Make-Out Pass 🔥💋",
     text: "One long, passionate kissing session. Phones away. No distractions. Just us.",
-  },
-  {
-    title: "Cuddle Attack 🫂🥰",
-    text: "Redeem whenever you want me to pull you close and refuse to let go for a while.",
-  },
-  {
-    title: "Your Lap, My Home ❤️",
-    text: "One private cuddle session where you get to keep me exactly where you want me.",
-  },
-  {
-    title: "Midnight Mischief 🌙😈",
-    text: "One late-night date where we forget the clock and enjoy being together.",
   },
   {
     title: "Kiss Everywhere 💋",
@@ -143,14 +125,6 @@ const coupons = [
   {
     title: "Spoil My Girl 👑❤️",
     text: "One entire day dedicated to making you feel ridiculously special.",
-  },
-  {
-    title: "Long Oral 🌙😈",
-    text: "You decide the time for oral sex, minimum timeline of 30 mins",
-  },
-  {
-    title: "Sunset Date 🌅",
-    text: "One sunset, two people, no phones and enough time to forget everything else exists.",
   },
   {
     title: "Three-Date Challenge 💕",
@@ -175,7 +149,7 @@ const coupons = [
 ========================================================= */
 
 export function JourneyTimeline() {
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(TEST_MODE);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -227,7 +201,7 @@ export function JourneyTimeline() {
           </p>
 
           <h1 className="mt-7 font-display text-5xl leading-none md:text-8xl">
-            Your Final Journey
+            My baccha's birthday is here
           </h1>
 
           <p className="mx-auto mt-7 max-w-xl text-sm leading-7 text-black/50 md:text-base">
